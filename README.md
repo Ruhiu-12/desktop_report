@@ -2,9 +2,10 @@
 
 1. **Setup Clone the repository**:
 2. https://github.com/Ruhiu-12/desktop_report.git
+3. 
 cd desktop_report
 
-3. **git clone 
+4. **git clone 
 Create and activate a virtual env:**
 
 python -m venv venv
