@@ -17,6 +17,7 @@ pip install -r requirements.txt
 **4. Run migrations:**
 
 python manage.py migrate
+
 **5. Start the development server:**
 
  python manage.py runserver
