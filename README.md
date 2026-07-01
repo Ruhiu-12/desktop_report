@@ -1,19 +1,22 @@
 # desktop_report
 
-Setup
-Clone the repository:
+1. **Setup Clone the repository**:
+2. https://github.com/Ruhiu-12/desktop_report.git
+cd desktop_report
 
-git clone 
-Create and activate a virtual env:
+3. **git clone 
+Create and activate a virtual env:**
 
 python -m venv venv
  source venv/bin/activate  # On Windows use venv\Scripts\activate
-Install dependencies:
+
+**4. Install dependencies:**
 
 pip install -r requirements.txt
-Run migrations:
+
+**4. Run migrations:**
 
 python manage.py migrate
-Start the development server:
+**5. Start the development server:**
 
  python manage.py runserver
