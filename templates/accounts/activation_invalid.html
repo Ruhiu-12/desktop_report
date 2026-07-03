@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}Activation Failed{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Activation Link Invalid</h2>
+    <p>The verification link has expired or is invalid. Please try registering again.</p>
+    <a href="{% url 'register' %}">Go back to registration</a>
+</div>
+{% endblock %}

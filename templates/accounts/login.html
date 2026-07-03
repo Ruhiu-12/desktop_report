@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Login | TechDesk Reporter{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+      <div class="login-card">
+        <div class="login-brand">
+          
+          <div class="title">TechDesk Reporter</div>
+        </div>
+
+        <h2>Welcome back</h2>
+
+        <form method="post" action="{% url 'login' %}">
+          {% csrf_token %}
+
+          <label for="identifier">Admission Number</label>
+          <input type="text" id="identifier" name="identifier" placeholder="Enter your admission number" required />
+
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required />
+
+          <div class="form-row">
+            <div class="small">
+              <label><input type="checkbox" name="remember" /> Remember me</label>
+            </div>
+            <a href="{% url 'forgot_password' %}">Forgot?</a>
+          </div>
+
+          <button type="submit">Login</button>
+
+          <div class="login-links">
+            <span class="login-note">Don't have an account?</span>
+            <a href="{% url 'register' %}">Register here</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out forwards';
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 5000);
+    });
+  });
+</script>
+{% endblock %}

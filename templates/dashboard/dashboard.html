@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | TechDesk Reporter{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    
+    <!-- Role-Based Header -->
+    <header class="dashboard-header">
+        <h1>
+            {% if user.is_superuser %}System Administrator Dashboard
+            {% elif user.groups.filter(name='admin').exists %}Administrator Dashboard
+            {% elif user.groups.filter(name='tech').exists %}Technical Support Dashboard
+            {% elif user.groups.filter(name='analyst').exists %}Forensic Analyst Dashboard
+            {% else %}Investigator Dashboard
+            {% endif %}
+        </h1>
+    </header>
+
+    <!-- Role-Specific Content -->
+<div class="dashboard-content">
+    {% if user.is_superuser %}
+        {% include 'dashboard/partials/superadmin_stats.html' %}
+    {% elif user.groups.filter(name='admin').exists %}
+        {% include 'dashboard/partials/admin_stats.html' %}
+    {% elif user.groups.filter(name='tech').exists %}
+        {% include 'dashboard/partials/tech_stats.html' %}
+    {% elif user.groups.filter(name='analyst').exists %}
+        {% include 'dashboard/partials/analyst_stats.html' %}
+    {% else %}
+        {% include 'dashboard/partials/user_stats.html' %}
+    {% endif %}
+</div>
+
+</div>
+{% endblock %}

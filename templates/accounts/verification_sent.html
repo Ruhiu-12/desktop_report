@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Verification Sent{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Verification Email Sent</h2>
+    
+    <div class="message-box">
+        {% if email %}
+            <p>We've sent a verification email to <strong>{{ email }}</strong>.</p>
+        {% else %}
+            <p>We've sent a verification email to your registered address.</p>
+        {% endif %}
+        
+        <p>Please open the message and click the verification link to activate your account. If you don't see it, please check your spam folder.</p>
+    </div>
+
+    <div class="actions">
+        {% if email %}
+            <a href="{% url 'resend_verification' %}?email={{ email|urlencode }}">Resend verification email</a>
+        {% else %}
+            <a href="{% url 'resend_verification' %}">Resend verification email</a>
+        {% endif %}
+        
+        <span>|</span>
+        <a href="{% url 'login' %}">Back to login</a>
+    </div>
+</div>
+{% endblock %}

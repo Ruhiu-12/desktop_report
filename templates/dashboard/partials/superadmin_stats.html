@@ -1,0 +1,74 @@
+<div class="superadmin-dashboard">
+    <!-- SYSTEM CONTROL PANEL -->
+    <div class="card system-controls">
+        <h3>System Root Controls</h3>
+        <div class="control-actions">
+            <button class="btn-warning" onclick="confirmAction('clear_cache')">Flush System Cache</button>
+            <button class="btn-warning" onclick="confirmAction('reindex_search')">Re-index Search</button>
+            <button class="btn-danger" onclick="confirmAction('backup_db')">Trigger Database Backup</button>
+            <a href="{% url 'admin:index' %}" class="btn-admin">Access Django Admin</a>
+        </div>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="stats-row">
+        <div class="card">
+            <h4>Total Cases</h4>
+            <p>{{ total_cases }}</p>
+        </div>
+        <div class="card">
+            <h4>System Users</h4>
+            <p>{{ total_users }}</p>
+        </div>
+        <div class="card">
+            <h4>Audit Logs</h4>
+            <p>{{ recent_audit_logs.count }} Recorded</p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="chart-section">
+        <div class="card">
+            <h3>Case Status Distribution</h3>
+            <div id="statusChart" data-counts='{{ case_status_counts }}'></div>
+        </div>
+        <div class="card">
+            <h3>Cases by Date (30 Days)</h3>
+            <div id="dateChart" data-data='{{ cases_by_date }}'></div>
+        </div>
+    </div>
+
+    <!-- Recent Audit Logs -->
+    <div class="card">
+        <h3>Recent System Activity</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_audit_logs %}
+                <tr>
+                    <td>{{ log.timestamp|date:"M d, H:i" }}</td>
+                    <td>{{ log.user.username }}</td>
+                    <td>{{ log.action }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">No logs available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function confirmAction(action) {
+        if (confirm("Are you sure you want to " + action + "? This may impact system performance.")) {
+            // You can trigger an AJAX request here or redirect to a specific admin view
+            console.log("Triggering: " + action);
+        }
+    }
+</script>
