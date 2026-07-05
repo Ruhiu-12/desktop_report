@@ -158,7 +158,7 @@ def forgot_password(request):
         messages.success(request, "Password reset email sent. Check your inbox.")
         return redirect("login")
         
-    return render(request, "dashboard_dispatcher")
+    return render(request, "accounts/forgot_password.html")
 
 # Reset Password: Handle form submission
 def reset_password(request, uidb64, token):
