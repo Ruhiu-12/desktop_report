@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ case.title }} | TechDesk Reporter{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="mb-4">
+        <a href="{% url 'case_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Cases</a>
+    </div>
+
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">{{ case.title }}</h1>
+            <p class="text-sm text-gray-500 mt-1">Created {{ case.created_at|date:"M d, Y H:i" }} by {{ case.created_by.identifier }}</p>
+        </div>
+        <div class="flex gap-2">
+            {% if user.is_superuser or user.groups.filter.name == 'admin' %}
+            <a href="{% url 'case_assign' case_id=case.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                Assign
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Info -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Details</h2>
+                <div class="prose prose-sm max-w-none text-gray-600">
+                    {{ case.description|linebreaks }}
+                </div>
+            </div>
+
+            <!-- Audit Log -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Audit Log</h2>
+                <div class="space-y-4">
+                    {% for log in audit_logs %}
+                    <div class="flex items-start gap-3 pb-4 {% if not forloop.last %}border-b border-gray-100{% endif %}">
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span class="text-xs font-medium text-gray-600">{{ log.changed_by.identifier|first }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-gray-800">{{ log.action }}</p>
+                            <p class="text-xs text-gray-400 mt-1">
+                                {{ log.changed_by.identifier }} &middot; {{ log.timestamp|date:"M d, Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500">No audit log entries.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Status</h2>
+                <div class="mb-4">
+                    {% if case.status == 'NEW' %}
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-blue-100 text-blue-800">New</span>
+                    {% elif case.status == 'ASSIGNED' %}
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">Assigned</span>
+                    {% elif case.status == 'IN_PROGRESS' %}
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-purple-100 text-purple-800">In Progress</span>
+                    {% elif case.status == 'PENDING_REVIEW' %}
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-orange-100 text-orange-800">Pending Review</span>
+                    {% elif case.status == 'CLOSED' %}
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-green-100 text-green-800">Closed</span>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Status Update -->
+                {% if user.is_superuser or user.groups.filter.name == 'admin' or case.technician == user %}
+                <form method="post" action="{% url 'case_update_status' case_id=case.id %}" class="space-y-3">
+                    {% csrf_token %}
+                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if case.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        Update Status
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Properties</h2>
+                <dl class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Priority</dt>
+                        <dd>
+                            {% if case.case_priority == 'CRITICAL' %}
+                            <span class="font-medium text-red-600">Critical</span>
+                            {% elif case.case_priority == 'HIGH' %}
+                            <span class="font-medium text-orange-600">High</span>
+                            {% elif case.case_priority == 'MEDIUM' %}
+                            <span class="font-medium text-yellow-600">Medium</span>
+                            {% elif case.case_priority == 'LOW' %}
+                            <span class="font-medium text-green-600">Low</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Technician</dt>
+                        <dd class="font-medium text-gray-800">{{ case.technician.identifier|default:"Unassigned" }}</dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Created</dt>
+                        <dd class="font-medium text-gray-800">{{ case.created_at|date:"M d, Y" }}</dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Updated</dt>
+                        <dd class="font-medium text-gray-800">{{ case.updated_at|date:"M d, Y" }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
