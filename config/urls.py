@@ -9,4 +9,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('cases/', include('cases.urls')),
     path('reports/', include('reports.urls')),
+    path('users/', include('users.urls')),
 ]

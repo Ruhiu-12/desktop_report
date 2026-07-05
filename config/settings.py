@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'dashboard',
     'accounts.apps.AccountsConfig',
     'reports.apps.ReportsConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
