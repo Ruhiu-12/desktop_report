@@ -1,30 +1,48 @@
-{% extends 'base.html' %}
+{% extends "base_simple.html" %}
 
-{% block title %}Email Verification Sent{% endblock %}
+{% block title %}Verification Email Sent | TechDesk Reporter{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>Verification Email Sent</h2>
-    
-    <div class="message-box">
-        {% if email %}
-            <p>We've sent a verification email to <strong>{{ email }}</strong>.</p>
-        {% else %}
-            <p>We've sent a verification email to your registered address.</p>
-        {% endif %}
-        
-        <p>Please open the message and click the verification link to activate your account. If you don't see it, please check your spam folder.</p>
+<div class="bg-white rounded-2xl shadow-xl p-8 fade-in">
+    <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-green-50 rounded-xl mb-4">
+            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">Check Your Email</h1>
     </div>
 
-    <div class="actions">
+    <div class="bg-gray-50 rounded-lg p-4 mb-6">
         {% if email %}
-            <a href="{% url 'resend_verification' %}?email={{ email|urlencode }}">Resend verification email</a>
+            <p class="text-sm text-gray-600">We've sent a verification link to</p>
+            <p class="text-sm font-semibold text-gray-900 mt-1">{{ email }}</p>
         {% else %}
-            <a href="{% url 'resend_verification' %}">Resend verification email</a>
+            <p class="text-sm text-gray-600">We've sent a verification link to your registered email address.</p>
         {% endif %}
-        
-        <span>|</span>
-        <a href="{% url 'login' %}">Back to login</a>
+    </div>
+
+    <p class="text-sm text-gray-500 text-center mb-6">
+        Click the link in the email to verify your account. If you don't see it, check your spam folder.
+    </p>
+
+    <div class="space-y-3">
+        {% if email %}
+            <a href="{% url 'resend_verification' %}?email={{ email|urlencode }}"
+               class="block w-full py-2.5 text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg text-sm transition">
+                Resend Verification Email
+            </a>
+        {% else %}
+            <a href="{% url 'resend_verification' %}"
+               class="block w-full py-2.5 text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg text-sm transition">
+                Resend Verification Email
+            </a>
+        {% endif %}
+
+        <a href="{% url 'login' %}"
+           class="block w-full py-2.5 text-center border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium rounded-lg text-sm transition">
+            Back to Login
+        </a>
     </div>
 </div>
 {% endblock %}
