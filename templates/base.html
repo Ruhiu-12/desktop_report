@@ -10,9 +10,9 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-100">
-    {% include "partials/topbar.html" %}
+    {% include "components/topbar.html" %}
     <div class="flex">
-        {% include "partials/sidebar.html" %}
+        {% include "components/sidebar.html" %}
         <div id="main-content" class="main-content flex-1 p-6">
             {% if messages %}
             <div class="mb-4">
