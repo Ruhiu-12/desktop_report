@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Report for {{ report.case.title }} | TechDesk Reporter{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="mb-4">
+        <a href="{% url 'report_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Reports</a>
+    </div>
+
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Report for {{ report.case.title }}</h1>
+            <p class="text-sm text-gray-500 mt-1">Submitted by {{ report.technician.identifier }} on {{ report.date_submitted|date:"M d, Y H:i" }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Findings</h2>
+                <div class="prose prose-sm max-w-none text-gray-600">
+                    {{ report.findings|linebreaks }}
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Solution Provided</h2>
+                <div class="prose prose-sm max-w-none text-gray-600">
+                    {{ report.solution_provided|linebreaks }}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Approval Status</h2>
+                <div class="mb-4">
+                    {% if report.is_approved %}
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+                    {% else %}
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Review</span>
+                    {% endif %}
+                </div>
+
+                {% if can_review and not report.is_approved %}
+                <div class="space-y-3">
+                    <form method="post" action="{% url 'report_review' report_id=report.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            Approve Report
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'report_review' report_id=report.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            Reject Report
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Case Reference</h2>
+                <dl class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Case</dt>
+                        <dd class="font-medium text-gray-800">
+                            <a href="{% url 'case_detail' case_id=report.case.id %}" class="text-blue-600 hover:text-blue-800">
+                                {{ report.case.title }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Status</dt>
+                        <dd class="font-medium text-gray-800">{{ report.case.get_status_display }}</dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Technician</dt>
+                        <dd class="font-medium text-gray-800">{{ report.technician.identifier }}</dd>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-500">Created By</dt>
+                        <dd class="font-medium text-gray-800">{{ report.case.created_by.identifier }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
