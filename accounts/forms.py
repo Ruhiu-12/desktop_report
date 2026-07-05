@@ -6,16 +6,9 @@ class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
 
-    ROLE_CHOICES = [
-        ('analyst', 'Analyst'),
-        ('technician', 'Technician'),
-        ('user', 'Standard User'),
-    ]
-    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Select Your Role")
-
     class Meta:
         model = CustomUser
-        fields = ['identifier', 'email', 'first_name', 'last_name', 'role']
+        fields = ['identifier', 'email', 'first_name', 'last_name']
 
     def clean(self):
         cleaned_data = super().clean()

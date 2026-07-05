@@ -1,19 +1,18 @@
 /* Sidebar */
-.sidebar { width: 250px; min-height: 100vh; transition: width 0.3s ease; }
-.sidebar.collapsed { width: 70px; }
+.sidebar { width: 180px; min-height: 100vh; transition: width 0.3s ease; }
+.sidebar.collapsed { width: 60px; }
 .sidebar.collapsed .sidebar-text { display: none; }
-.main-content { margin-left: 250px; transition: margin-left 0.3s ease; }
-.main-content.expanded { margin-left: 70px; }
+.main-content { margin-left: 180px; transition: margin-left 0.3s ease; }
+.main-content.expanded { margin-left: 60px; }
+
+/* Sidebar bottom - remove border, fix logout */
+.sidebar .absolute { border-top: none !important; }
+.sidebar .absolute a { width: auto; display: inline-flex; }
+
+/* Table */
 .table-container { overflow-x: auto; }
+
+/* Toast */
 .toast { position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.3s ease-out; }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-.badge-new { background-color: #3B82F6; }
-.badge-assigned { background-color: #F59E0B; }
-.badge-in_progress { background-color: #8B5CF6; }
-.badge-pending_review { background-color: #EC4899; }
-.badge-closed { background-color: #10B981; }
-.priority-low { background-color: #6B7280; }
-.priority-medium { background-color: #F59E0B; }
-.priority-high { background-color: #F97316; }
-.priority-critical { background-color: #EF4444; }

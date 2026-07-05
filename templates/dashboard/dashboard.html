@@ -15,84 +15,73 @@
             {% else %}My Dashboard
             {% endif %}
         </h1>
-        <p class="text-gray-500 mt-1">Welcome back, {{ user.get_full_name|default:user.username }}</p>
+        <p class="text-gray-500 mt-1">Welcome back, {{ user.identifier }}</p>
     </div>
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {% if user_role == 'superadmin' %}
-        <div class="bg-white rounded-lg shadow p-6">
+        {% if user_role == 'superadmin' or user_role == 'admin' %}
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div class="text-sm font-medium text-gray-500">Total Cases</div>
             <div class="mt-2 text-3xl font-bold text-gray-900">{{ total_cases }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
+        {% if user_role == 'superadmin' %}
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
             <div class="text-sm font-medium text-gray-500">Total Users</div>
             <div class="mt-2 text-3xl font-bold text-gray-900">{{ total_users }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="text-sm font-medium text-gray-500">Active Cases</div>
-            <div class="mt-2 text-3xl font-bold text-blue-600">{{ total_cases }}</div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="text-sm font-medium text-gray-500">System Health</div>
-            <div class="mt-2 text-3xl font-bold text-green-600">OK</div>
-        </div>
-
-        {% elif user_role == 'admin' %}
-        <div class="bg-white rounded-lg shadow p-6">
+        {% endif %}
+        {% if user_role == 'admin' %}
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
             <div class="text-sm font-medium text-gray-500">Pending Approvals</div>
-            <div class="mt-2 text-3xl font-bold text-orange-500">{{ pending_approvals }}</div>
+            <div class="mt-2 text-3xl font-bold text-yellow-600">{{ pending_approvals }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
             <div class="text-sm font-medium text-gray-500">Active Cases</div>
-            <div class="mt-2 text-3xl font-bold text-blue-600">{{ active_cases }}</div>
+            <div class="mt-2 text-3xl font-bold text-green-600">{{ active_cases }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="text-sm font-medium text-gray-500">Total Cases</div>
-            <div class="mt-2 text-3xl font-bold text-gray-900">{{ pending_approvals|add:active_cases }}</div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="text-sm font-medium text-gray-500">Team Status</div>
-            <div class="mt-2 text-3xl font-bold text-green-600">Active</div>
-        </div>
+        {% endif %}
+        {% endif %}
 
-        {% elif user_role == 'technician' %}
-        <div class="bg-white rounded-lg shadow p-6">
+        {% if user_role == 'technician' %}
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div class="text-sm font-medium text-gray-500">My Cases</div>
             <div class="mt-2 text-3xl font-bold text-gray-900">{{ my_cases }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
             <div class="text-sm font-medium text-gray-500">Assigned to Me</div>
-            <div class="mt-2 text-3xl font-bold text-blue-600">{{ assigned_to_me }}</div>
+            <div class="mt-2 text-3xl font-bold text-orange-600">{{ assigned_to_me }}</div>
         </div>
+        {% endif %}
 
-        {% elif user_role == 'analyst' %}
-        <div class="bg-white rounded-lg shadow p-6">
+        {% if user_role == 'analyst' %}
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div class="text-sm font-medium text-gray-500">Pending Analysis</div>
-            <div class="mt-2 text-3xl font-bold text-orange-500">{{ pending_analysis }}</div>
+            <div class="mt-2 text-3xl font-bold text-blue-600">{{ pending_analysis }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="text-sm font-medium text-gray-500">Total Cases</div>
-            <div class="mt-2 text-3xl font-bold text-gray-900">{{ pending_analysis }}</div>
-        </div>
+        {% endif %}
 
-        {% else %}
-        <div class="bg-white rounded-lg shadow p-6">
+        {% if user_role == 'user' %}
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
             <div class="text-sm font-medium text-gray-500">My Cases</div>
             <div class="mt-2 text-3xl font-bold text-gray-900">{{ my_cases }}</div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
             <div class="text-sm font-medium text-gray-500">Open Cases</div>
-            <div class="mt-2 text-3xl font-bold text-blue-600">{{ open_cases }}</div>
+            <div class="mt-2 text-3xl font-bold text-orange-600">{{ open_cases }}</div>
         </div>
         {% endif %}
     </div>
 
-    <!-- Recent Cases -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-800">Recent Cases</h2>
-            <a href="{% url 'case_list' %}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View all &rarr;</a>
+    <!-- Recent Cases Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-800">
+                {% if user_role == 'technician' %}Assigned Cases
+                {% elif user_role == 'analyst' %}Cases Pending Review
+                {% else %}Recent Cases
+                {% endif %}
+            </h2>
         </div>
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -101,7 +90,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -135,7 +124,7 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ case.created_by.get_full_name|default:case.created_by.username }}
+                        {{ case.created_by.identifier }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {{ case.created_at|date:"M d, Y" }}
@@ -150,7 +139,9 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div class="px-6 py-3 border-t border-gray-200">
+            <a href="{% url 'case_list' %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View all cases →</a>
+        </div>
     </div>
-
 </div>
 {% endblock %}

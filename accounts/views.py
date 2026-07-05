@@ -284,23 +284,7 @@ def logout_view(request):
 # Dashboard Dispatcher
 @login_required
 def dashboard(request):
-    # Route Superusers to the native Django Admin panel
-    if request.user.is_superuser:
-        return redirect("/admin/")
-    
-    # Route based on user group membership
-    if request.user.groups.filter(name='analyst').exists():
-        return redirect("reports:dashboard")
-    
-    elif request.user.groups.filter(name='technician').exists():
-        return redirect("custody:dashboard")
-    
-    elif request.user.groups.filter(name='investigator').exists():
-        return redirect("cases:case_list")
-    
-    else:
-        # Default fallback for users without specific roles
-        return redirect("dashboard:dashboard")
+    return redirect("dashboard:dashboard")
 
 
 

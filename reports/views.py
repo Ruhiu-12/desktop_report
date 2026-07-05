@@ -90,7 +90,7 @@ def report_create(request, case_id):
         return redirect('report_list')
 
     if request.method == 'POST':
-        form = ReportCreateForm(request.POST)
+        form = ReportCreateForm(request.POST, request.FILES)
         if form.is_valid():
             report = form.save(commit=False)
             report.case = case

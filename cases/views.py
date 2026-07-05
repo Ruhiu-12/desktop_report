@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponseForbidden
-from .models import Case, CaseAuditLog
+from .models import Case, CaseAuditLog, CaseNote
 from .forms import CaseAssignmentForm, CaseCreateForm, CaseStatusUpdateForm
 
 User = get_user_model()
@@ -62,6 +62,7 @@ def case_list(request):
 def case_detail(request, case_id):
     case = get_object_or_404(Case.objects.select_related('created_by', 'technician'), id=case_id)
     audit_logs = case.audit_logs.select_related('changed_by').all()
+    notes = case.notes.select_related('author').all()
 
     user = request.user
     if not (user.is_superuser or user.groups.filter(name='admin').exists()
@@ -72,15 +73,44 @@ def case_detail(request, case_id):
     context = {
         'case': case,
         'audit_logs': audit_logs,
+        'notes': notes,
         'status_choices': Case.STATUS_CHOICES,
     }
     return render(request, 'cases/case_detail.html', context)
 
 
 @login_required
+def case_add_note(request, case_id):
+    case = get_object_or_404(Case, id=case_id)
+    user = request.user
+
+    if not (user.is_superuser or user.groups.filter(name='admin').exists()
+            or case.created_by == user or case.technician == user
+            or user.groups.filter(name='analyst').exists()):
+        return HttpResponseForbidden("You do not have permission to add notes to this case.")
+
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        if content:
+            CaseNote.objects.create(
+                case=case,
+                author=user,
+                content=content,
+            )
+            CaseAuditLog.objects.create(
+                case=case,
+                action=f'Note added by {user.identifier}',
+                changed_by=user,
+            )
+            messages.success(request, 'Note added.')
+
+    return redirect('case_detail', case_id=case.id)
+
+
+@login_required
 def case_create(request):
     if request.method == 'POST':
-        form = CaseCreateForm(request.POST)
+        form = CaseCreateForm(request.POST, request.FILES)
         if form.is_valid():
             case = form.save(commit=False)
             case.created_by = request.user
@@ -135,10 +165,17 @@ def case_update_status(request, case_id):
             or case.technician == user):
         return HttpResponseForbidden("You do not have permission to update this case.")
 
+    # Define allowed status transitions per role
+    if user.is_superuser or user.groups.filter(name='admin').exists():
+        allowed_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'CLOSED']
+    elif case.technician == user:
+        allowed_statuses = ['IN_PROGRESS', 'PENDING_REVIEW']
+    else:
+        allowed_statuses = []
+
     if request.method == 'POST':
         new_status = request.POST.get('status', '')
-        valid_statuses = [choice[0] for choice in Case.STATUS_CHOICES]
-        if new_status in valid_statuses:
+        if new_status in allowed_statuses:
             old_status = case.status
             case.status = new_status
             case.save()
@@ -149,6 +186,6 @@ def case_update_status(request, case_id):
             )
             messages.success(request, f'Case status updated to {case.get_status_display()}.')
         else:
-            messages.error(request, 'Invalid status selected.')
+            messages.error(request, 'Invalid status transition.')
 
     return redirect('case_detail', case_id=case.id)

@@ -19,6 +19,7 @@ class Case(models.Model):
 
     title = models.CharField(max_length=200)
     description = models.TextField()
+    image = models.ImageField(upload_to='cases/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
     case_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
     case_priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='MEDIUM')
@@ -61,6 +62,7 @@ class Report(models.Model):
     )
     findings = models.TextField()
     solution_provided = models.TextField()
+    image = models.ImageField(upload_to='reports/', blank=True, null=True)
     date_submitted = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=False)
 
@@ -91,3 +93,24 @@ class CaseAuditLog(models.Model):
 
     def __str__(self):
         return f"{self.case.title} - {self.action}"
+
+
+class CaseNote(models.Model):
+    case = models.ForeignKey(
+        Case,
+        on_delete=models.CASCADE,
+        related_name='notes'
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Note by {self.author} on {self.case.title}"

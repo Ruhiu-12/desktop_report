@@ -30,6 +30,13 @@
                     {{ report.solution_provided|linebreaks }}
                 </div>
             </div>
+
+            {% if report.image %}
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Evidence Photo</h2>
+                <img src="{{ report.image.url }}" alt="Evidence" class="rounded-lg border border-gray-200 max-w-full">
+            </div>
+            {% endif %}
         </div>
 
         <div class="space-y-6">

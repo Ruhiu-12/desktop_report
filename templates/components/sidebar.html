@@ -7,6 +7,7 @@
     
     <nav class="p-4">
         <ul class="space-y-2">
+            <!-- Dashboard - All roles -->
             <li>
                 <a href="{% url 'dashboard' %}" class="flex items-center p-2 rounded hover:bg-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,29 +17,54 @@
                 </a>
             </li>
 
-            {% if user.is_authenticated and not user.groups.filter.name == 'analyst' %}
+            {% with user_role=user.groups.all.0.name|default:'' %}
+            
+            <!-- Admin/SuperAdmin: All Cases -->
+            {% if user.is_superuser or user_role == 'admin' %}
             <li>
                 <a href="{% url 'case_list' %}" class="flex items-center p-2 rounded hover:bg-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
-                    <span class="sidebar-text ml-3">Cases</span>
+                    <span class="sidebar-text ml-3">All Cases</span>
                 </a>
             </li>
             {% endif %}
 
-            {% if user.is_authenticated and not user.is_superuser and not user.groups.filter.name == 'admin' and not user.groups.filter.name == 'technician' and not user.groups.filter.name == 'analyst' %}
+            <!-- Technician: My Cases -->
+            {% if user_role == 'technician' %}
+            <li>
+                <a href="{% url 'case_list' %}" class="flex items-center p-2 rounded hover:bg-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span class="sidebar-text ml-3">My Cases</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Regular User: My Cases + Report Issue -->
+            {% if not user.is_superuser and user_role != 'admin' and user_role != 'technician' and user_role != 'analyst' %}
+            <li>
+                <a href="{% url 'case_list' %}" class="flex items-center p-2 rounded hover:bg-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span class="sidebar-text ml-3">My Cases</span>
+                </a>
+            </li>
             <li>
                 <a href="{% url 'case_create' %}" class="flex items-center p-2 rounded hover:bg-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    <span class="sidebar-text ml-3">Create Case</span>
+                    <span class="sidebar-text ml-3">Report Issue</span>
                 </a>
             </li>
             {% endif %}
 
-            {% if user.is_authenticated and user.is_superuser or user.groups.filter.name == 'admin' or user.groups.filter.name == 'technician' or user.groups.filter.name == 'analyst' %}
+            <!-- Reports - Admin, Technician, Analyst, SuperAdmin -->
+            {% if user.is_superuser or user_role == 'admin' or user_role == 'technician' or user_role == 'analyst' %}
             <li>
                 <a href="{% url 'report_list' %}" class="flex items-center p-2 rounded hover:bg-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +75,8 @@
             </li>
             {% endif %}
 
-            {% if user.is_authenticated and user.is_superuser or user.groups.filter.name == 'admin' %}
+            <!-- Users - Admin and SuperAdmin only -->
+            {% if user.is_superuser or user_role == 'admin' %}
             <li>
                 <a href="{% url 'user_list' %}" class="flex items-center p-2 rounded hover:bg-gray-700">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,22 +86,24 @@
                 </a>
             </li>
             {% endif %}
+
+            {% endwith %}
         </ul>
     </nav>
 
     {% if user.is_authenticated %}
-    <div class="absolute bottom-0 w-full p-4 border-t border-gray-700">
-        <div class="flex items-center">
-            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+    <div class="absolute bottom-0 w-full p-4">
+        <div class="flex items-center mb-3">
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <span class="text-sm font-medium">{{ user.identifier|first }}</span>
             </div>
-            <div class="sidebar-text ml-3">
-                <p class="text-sm font-medium">{{ user.identifier }}</p>
-                <p class="text-xs text-gray-400">{{ user.email }}</p>
+            <div class="sidebar-text ml-3 overflow-hidden">
+                <p class="text-sm font-medium truncate">{{ user.identifier }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
             </div>
         </div>
-        <a href="{% url 'logout' %}" class="mt-4 flex items-center p-2 rounded hover:bg-gray-700 text-red-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{% url 'logout' %}" class="flex items-center p-2 rounded hover:bg-gray-700 text-red-400 w-fit">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
             <span class="sidebar-text ml-3">Logout</span>
