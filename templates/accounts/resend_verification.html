@@ -1,0 +1,11 @@
+<form method="POST">
+    {% csrf_token %}
+    <label for="email">Email Address:</label>
+    
+    <!-- The 'value' attribute here allows editing -->
+    <input type="email" name="email" id="email" 
+           value="{{ email }}" 
+           placeholder="you@example.com" required>
+    
+    <button type="submit">Send New Link</button>
+</form>

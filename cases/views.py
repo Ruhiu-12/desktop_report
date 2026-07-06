@@ -17,11 +17,11 @@ def case_list(request):
     user = request.user
 
     # Role-based filtering
-    if user.is_superuser or user.groups.filter(name='admin').exists():
+    if user.is_superuser or user.groups.filter(name='Admin').exists():
         pass  # See all
-    elif user.groups.filter(name='technician').exists():
+    elif user.groups.filter(name='Technician').exists():
         queryset = queryset.filter(technician=user)
-    elif user.groups.filter(name='analyst').exists():
+    elif user.groups.filter(name='Analyst').exists():
         queryset = queryset.filter(status='PENDING_REVIEW')
     else:
         queryset = queryset.filter(created_by=user)
@@ -65,9 +65,9 @@ def case_detail(request, case_id):
     notes = case.notes.select_related('author').all()
 
     user = request.user
-    if not (user.is_superuser or user.groups.filter(name='admin').exists()
+    if not (user.is_superuser or user.groups.filter(name='Admin').exists()
             or case.created_by == user or case.technician == user
-            or user.groups.filter(name='analyst').exists()):
+            or user.groups.filter(name='Analyst').exists()):
         return HttpResponseForbidden("You do not have permission to view this case.")
 
     context = {
@@ -84,9 +84,9 @@ def case_add_note(request, case_id):
     case = get_object_or_404(Case, id=case_id)
     user = request.user
 
-    if not (user.is_superuser or user.groups.filter(name='admin').exists()
+    if not (user.is_superuser or user.groups.filter(name='Admin').exists()
             or case.created_by == user or case.technician == user
-            or user.groups.filter(name='analyst').exists()):
+            or user.groups.filter(name='Analyst').exists()):
         return HttpResponseForbidden("You do not have permission to add notes to this case.")
 
     if request.method == 'POST':
@@ -133,7 +133,7 @@ def case_assign(request, case_id):
     case = get_object_or_404(Case, id=case_id)
     user = request.user
 
-    if not (user.is_superuser or user.groups.filter(name='admin').exists()):
+    if not (user.is_superuser or user.groups.filter(name='Admin').exists()):
         return HttpResponseForbidden("You do not have permission to assign cases.")
 
     if request.method == 'POST':
@@ -161,12 +161,12 @@ def case_update_status(request, case_id):
     case = get_object_or_404(Case, id=case_id)
     user = request.user
 
-    if not (user.is_superuser or user.groups.filter(name='admin').exists()
+    if not (user.is_superuser or user.groups.filter(name='Admin').exists()
             or case.technician == user):
         return HttpResponseForbidden("You do not have permission to update this case.")
 
     # Define allowed status transitions per role
-    if user.is_superuser or user.groups.filter(name='admin').exists():
+    if user.is_superuser or user.groups.filter(name='Admin').exists():
         allowed_statuses = ['IN_PROGRESS', 'PENDING_REVIEW', 'CLOSED']
     elif case.technician == user:
         allowed_statuses = ['IN_PROGRESS', 'PENDING_REVIEW']

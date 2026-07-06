@@ -90,7 +90,7 @@ def user_update_role(request, user_id):
 
     if request.method == 'POST':
         role = request.POST.get('role', '')
-        all_roles = ['admin', 'technician', 'analyst', 'investigator', 'user']
+        all_roles = ['Admin', 'Technician', 'Analyst',  'User']
 
         if role in all_roles:
             target_user.groups.clear()

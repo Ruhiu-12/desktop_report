@@ -12,10 +12,7 @@ urlpatterns = [
     ),
    
     path("verify/<uidb64>/<token>/", views.verify_email, name="verify_email"),
-    path(
-        "resend_verification",
-        views.resend_verification_email,
-        name="resend_verification",
+    path("resend_verification",  views.resend_verification_email,  name="resend_verification",
     ),
     path("logout", views.logout_view, name="logout"),
     path("forgot-password/", views.forgot_password, name="forgot_password"),

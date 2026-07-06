@@ -28,7 +28,7 @@ def register(request):
         if form.is_valid():
             # Create user but don't save to DB yet
             user = form.save(commit=False)
-            user.is_active = True
+            user.is_active = False
             user.is_verified = False  # Ensure user cannot log in until verified
             user.set_password(form.cleaned_data["password"])
             user.save()
@@ -37,13 +37,47 @@ def register(request):
             send_verification_email(request, user)
             
             messages.success(request, "Account created! Please check your email to verify.")
-            return redirect("verification_sent")
+            return render(request, "accounts/verification_sent.html", {"email": user.email})
     else:
         form = UserRegistrationForm()
         
     return render(request, "accounts/register.html", {"form": form})
 
 # Helper function to send the activation email
+
+
+# def send_verification_email(request, user):
+#     print("--- I AM INSIDE THE SEND VERIFICATION EMAIL FUNCTION ---")
+#     print(f"DEBUG: Starting email process for {user.email}")
+#     try:
+#         current_site = get_current_site(request)
+#         subject = "Verify your account"
+#         uid = urlsafe_base64_encode(force_bytes(user.pk))
+#         token = account_activation_token.make_token(user)
+        
+#         html_message = render_to_string("emails/verification_email.html", {
+#             "user": user,
+#             "domain": current_site.domain,
+#             "uid": uid,
+#             "token": token,
+#         })
+        
+#         email = EmailMessage(
+#             subject,
+#             html_message,
+#             settings.EMAIL_HOST_USER,
+#             [user.email]
+#         )
+#         email.content_subtype = "html"
+        
+#         # Force it to fail loudly
+#         email.send(fail_silently=False)
+#         print("DEBUG: Email sent successfully!")
+        
+#     except Exception as e:
+#         print(f"DEBUG: EMAIL FAILED WITH ERROR: {e}")
+
+
 def send_verification_email(request, user):
     current_site = get_current_site(request)
     subject = "Verify your account"
@@ -72,6 +106,27 @@ def send_verification_email(request, user):
 def verification_sent(request):
     return render(request, 'accounts/verification_sent.html')
 
+def resend_verification_email(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        try:
+            user = User.objects.get(email=email)
+            if user.is_verified:
+                messages.info(request, "Account already verified.")
+                return redirect("login")
+            
+            # Send the new link
+            send_verification_email(request, user)
+            messages.success(request, "A new verification link has been sent to your email.")
+            return redirect("verification_sent")
+        except User.DoesNotExist:
+            messages.error(request, "No account found with that email.")
+            return redirect("resend_verification")
+    
+    # If GET request, show the form
+    return render(request, 'accounts/resend_verification.html')
+
+
 def proceed_to_dashboard(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
@@ -82,50 +137,48 @@ def proceed_to_dashboard(request):
 
 def verify_email(request, uidb64, token):
     try:
-        # Decode the user's Primary Key from the URL
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
 
-    # Check if the token is valid for this user
     if user and account_activation_token.check_token(user, token):
-        # Successfully verified: flip the switch
         user.is_verified = True
-        user.is_active = True  # Optionally activate the user if you want them to log in immediately
+        user.is_active = True
         user.save()
-        
-        # Log the user in automatically after verification
         auth_login(request, user)
         
-        
+        # Change this to a success template or redirect
+        messages.success(request, "Your account has been verified! Welcome.")
+        return redirect("dashboard") # Or render a success template
+    
+    else:
+        # This is where the invalid error should go
         return render(request, "accounts/activation_invalid.html")
     
 
 # Resend Verification token
 def resend_verification_email(request):
+    # 1. Try to get the email from the URL parameter OR the form input
     email = request.GET.get("email") or request.POST.get("email")
-    if not email:
-        messages.error(request, "Email is required.")
-        return redirect("verification_sent")
     
-    try:
-        user = User.objects.get(email=email)
-        
-        # Check if the user is already verified
-        if user.is_verified:
-            messages.info(request, "This account is already verified. Please log in.")
-            return redirect("login")
-        
-        # Generate a new token and send the email
-        send_verification_email(request, user)
-        
-        messages.success(request, f"A new verification email has been sent to {user.email}.")
-        return redirect("verification_sent")
-        
-    except User.DoesNotExist:
-        messages.error(request, "No account found with this email.")
-        return redirect("register")
+    if request.method == "POST":
+        # Process the resend request
+        try:
+            user = User.objects.get(email=email)
+            if user.is_verified:
+                messages.info(request, "This account is already verified.")
+                return redirect("login")
+            
+            send_verification_email(request, user)
+            messages.success(request, f"Verification link resent to {email}.")
+            return redirect("verification_sent")
+        except User.DoesNotExist:
+            messages.error(request, "Account not found.")
+            return render(request, 'accounts/resend_verification.html')
+            
+    # 2. If it's a GET request, pass the email to the template so it can be auto-filled
+    return render(request, 'accounts/resend_verification.html', {'email': email})
     
 
 
