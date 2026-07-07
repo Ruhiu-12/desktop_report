@@ -1,11 +1,118 @@
-<form method="POST">
-    {% csrf_token %}
-    <label for="email">Email Address:</label>
-    
-    <!-- The 'value' attribute here allows editing -->
-    <input type="email" name="email" id="email" 
-           value="{{ email }}" 
-           placeholder="you@example.com" required>
-    
-    <button type="submit">Send New Link</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resend Link</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        body{
+            background:#f4f6f9;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+        }
+
+        .container{
+            background:#fff;
+            width:400px;
+            padding:30px;
+            border-radius:12px;
+            box-shadow:0 10px 25px rgba(0,0,0,.1);
+        }
+
+        h2{
+            text-align:center;
+            color:#333;
+            margin-bottom:10px;
+        }
+
+        p{
+            text-align:center;
+            color:#666;
+            font-size:14px;
+            margin-bottom:25px;
+        }
+
+        label{
+            display:block;
+            margin-bottom:8px;
+            font-weight:bold;
+            color:#444;
+        }
+
+        input[type="email"]{
+            width:100%;
+            padding:12px;
+            border:1px solid #ccc;
+            border-radius:8px;
+            font-size:15px;
+            outline:none;
+            transition:.3s;
+            margin-bottom:20px;
+        }
+
+        input[type="email"]:focus{
+            border-color:#2563eb;
+            box-shadow:0 0 0 3px rgba(37,99,235,.15);
+        }
+
+        button{
+            width:100%;
+            padding:12px;
+            border:none;
+            border-radius:8px;
+            background:#2563eb;
+            color:#fff;
+            font-size:16px;
+            font-weight:bold;
+            cursor:pointer;
+            transition:.3s;
+        }
+
+        button:hover{
+            background:#1d4ed8;
+        }
+
+        @media(max-width:450px){
+            .container{
+                width:90%;
+                padding:25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Resend Verification Link</h2>
+    <p>Enter or edit your email address below to receive a new verification link.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label for="email">Email Address</label>
+
+        <input
+            type="email"
+            name="email"
+            id="email"
+            value="{{ email }}"
+            placeholder="you@example.com"
+            required
+        >
+
+        <button type="submit">Send New Link</button>
+    </form>
+</div>
+
+</body>
+</html>

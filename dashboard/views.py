@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
 
-from cases.models import Case
+from cases.models import Case, CaseAuditLog
 from accounts.models import CustomUser as User
 
 
@@ -19,6 +19,8 @@ def dashboard(request):
             'user_role': 'superadmin',
             'total_cases': Case.objects.count(),
             'total_users': User.objects.count(),
+            'open_cases': Case.objects.filter(~Q(status='CLOSED')).count(),
+            'recent_audit_logs': CaseAuditLog.objects.order_by('-timestamp')[:10],  # Assuming you have a CaseAuditLog model for audit logs
         })
     elif user.groups.filter(name='admin').exists():
         context.update({
