@@ -13,6 +13,14 @@ from django.contrib.auth import authenticate, login as auth_login, logout, get_u
 
 from django.http import HttpResponse
 from datetime import datetime
+from logs.models import ActivityLog
+
+
+def _get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0]
+    return request.META.get('REMOTE_ADDR')
 
 # Import your custom tokens and forms
 from .tokens import account_activation_token, password_reset_token
@@ -313,7 +321,12 @@ def login_view(request):
             
             if user is not None:
                 auth_login(request, user)
-                # Redirect to the dispatcher to handle role-based routing
+                ActivityLog.objects.create(
+                    user=user,
+                    action='LOGIN',
+                    description=f'{user.identifier} logged in',
+                    ip_address=_get_client_ip(request)
+                )
                 return redirect("dashboard")
             else:
                 messages.error(request, "Invalid identifier or password.")
@@ -328,10 +341,16 @@ def login_view(request):
 # Logout view
 def logout_view(request):
     if request.user.is_authenticated:
+        ActivityLog.objects.create(
+            user=request.user,
+            action='LOGOUT',
+            description=f'{request.user.identifier} logged out',
+            ip_address=_get_client_ip(request)
+        )
         logout(request)
-        messages.success(request, "You’ve been logged out successfully.")
+        messages.success(request, "You've been logged out successfully.")
     else:
-        messages.info(request, "You’re not logged in.")
+        messages.info(request, "You're not logged in.")
     return redirect("login")
 
 # Dashboard Dispatcher

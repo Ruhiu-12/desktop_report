@@ -12,6 +12,7 @@ urlpatterns = [
     path('cases/', include('cases.urls')),
     path('reports/', include('reports.urls')),
     path('users/', include('users.urls')),
+    path('logs/', include('logs.urls')),
 ]
 
 if settings.DEBUG:
