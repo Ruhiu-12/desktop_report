@@ -22,19 +22,19 @@ def dashboard(request):
             'open_cases': Case.objects.filter(~Q(status='CLOSED')).count(),
             'recent_audit_logs': CaseAuditLog.objects.order_by('-timestamp')[:10],  # Assuming you have a CaseAuditLog model for audit logs
         })
-    elif user.groups.filter(name='admin').exists():
+    elif user.groups.filter(name='Admin').exists():
         context.update({
             'user_role': 'admin',
             'pending_approvals': Case.objects.filter(status='PENDING_REVIEW').count(),
             'active_cases': Case.objects.filter(status='IN_PROGRESS').count(),
         })
-    elif user.groups.filter(name='technician').exists():
+    elif user.groups.filter(name='Technician').exists():
         context.update({
             'user_role': 'technician',
             'my_cases': Case.objects.filter(technician=user).count(),
             'assigned_to_me': Case.objects.filter(technician=user, status='ASSIGNED').count(),
         })
-    elif user.groups.filter(name='analyst').exists():
+    elif user.groups.filter(name='Analyst').exists():
         context.update({
             'user_role': 'analyst',
             'pending_analysis': Case.objects.filter(status='NEW').count(),

@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponseForbidden
+from logs.models import ActivityLog
 
 User = get_user_model()
 
@@ -93,11 +94,42 @@ def user_update_role(request, user_id):
         all_roles = ['Admin', 'Technician', 'Analyst',  'User']
 
         if role in all_roles:
+            old_roles = list(target_user.groups.values_list('name', flat=True))
             target_user.groups.clear()
             group, _ = Group.objects.get_or_create(name=role)
             target_user.groups.add(group)
+            ActivityLog.objects.create(
+                user=request.user,
+                action='USER_UPDATE_ROLE',
+                description=f'Changed {target_user.identifier} role from {", ".join(old_roles) or "None"} to {role}'
+            )
             messages.success(request, f"Role for {target_user.identifier} changed to {role}.")
         else:
             messages.error(request, "Invalid role selected.")
+
+    return redirect('user_detail', user_id=user_id)
+
+
+@login_required
+def user_delete(request, user_id):
+    if not _is_admin(request.user):
+        return HttpResponseForbidden("You do not have permission to access this page.")
+
+    target_user = get_object_or_404(User, id=user_id)
+
+    if request.method == 'POST':
+        if target_user == request.user:
+            messages.error(request, "You cannot delete your own account.")
+            return redirect('user_detail', user_id=user_id)
+
+        identifier = target_user.identifier
+        ActivityLog.objects.create(
+            user=request.user,
+            action='USER_DELETE',
+            description=f'Deleted user {identifier}'
+        )
+        target_user.delete()
+        messages.success(request, f"User {identifier} has been deleted.")
+        return redirect('user_list')
 
     return redirect('user_detail', user_id=user_id)

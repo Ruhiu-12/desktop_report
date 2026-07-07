@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'reports.apps.ReportsConfig',
     'users.apps.UsersConfig',
+    'logs.apps.LogsConfig',
 ]
 
 MIDDLEWARE = [

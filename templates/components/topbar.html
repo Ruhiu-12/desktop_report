@@ -11,6 +11,12 @@
         
         {% if user.is_authenticated %}
         <div class="flex items-center space-x-4">
+            <a href="{% url 'feedback_submit' %}" class="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Site Feedback
+            </a>
             <span class="text-sm text-gray-600">{{ user.get_full_name|default:user.identifier }}</span>
             <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span class="text-white text-sm font-medium">{{ user.identifier|first }}</span>
