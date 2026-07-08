@@ -13,11 +13,14 @@ def lab_machines_api(request):
             machines.append({
                 'name': m.name,
                 'status': m.status.lower().replace('_', ''),
+                'row': m.grid_row,
+                'col': m.grid_col,
             })
         data.append({
             'name': lab.name,
             'location': lab.location,
             'machine_count': lab.machines.count(),
+            'grid_columns': lab.grid_columns,
             'machines': machines,
         })
     return JsonResponse({'labs': data})

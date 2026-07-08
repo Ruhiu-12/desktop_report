@@ -29,24 +29,31 @@
             <span class="material-symbols-outlined" style="color:var(--brand);font-size:20px">computer</span>
           </div>
           <div>
-            <p style="margin:0;font-weight:700;font-size:15px">{{ lab.name }}</p>
+            <p style="margin:0;font-weight:700;font-size:15px">{{ lab.name }} <span style="font-weight:400;font-size:12px;color:var(--text-secondary)">( {{ lab.grid_columns }} columns )</span></p>
             <p style="margin:2px 0 0;font-size:12px;color:var(--text-secondary)">{{ lab.machines.count }} machines · {{ lab.location|default:"—" }}</p>
           </div>
         </div>
-        <form method="post" action="{% url 'lab_delete' lab.id %}" onsubmit="return confirm('Delete {{ lab.name }}?')">
-          {% csrf_token %}
-          <button class="btn btn-ghost btn-sm" style="color:var(--danger)" type="submit"><span class="material-symbols-outlined">delete</span></button>
-        </form>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">
-        {% for machine in lab.machines.all %}
-        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all .2s" onclick="openMachineModal('{{ machine.name }}', '{{ machine.status }}', {{ machine.id }})" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
-          <span class="material-symbols-outlined" style="font-size:16px;color:{% if machine.status == 'HEALTHY' %}var(--success){% elif machine.status == 'FLAGGED' %}var(--warning){% elif machine.status == 'DOWN' %}var(--danger){% else %}var(--st-progress){% endif %}">{% if machine.status == 'HEALTHY' %}check_circle{% elif machine.status == 'FLAGGED' %}warning{% elif machine.status == 'DOWN' %}error{% else %}build{% endif %}</span>
-          <p style="margin:2px 0 0;font-size:10px;font-weight:600">{{ machine.name }}</p>
-          <p style="margin:0;font-size:9px;color:var(--text-secondary)">{{ machine.get_status_display }}</p>
+        <div style="display:flex;gap:8px">
+          <form method="post" action="{% url 'lab_delete' lab.id %}" onsubmit="return confirm('Delete {{ lab.name }}?')">
+            {% csrf_token %}
+            <button class="btn btn-ghost btn-sm" style="color:var(--danger)" type="submit"><span class="material-symbols-outlined">delete</span></button>
+          </form>
         </div>
+      </div>
+      <p style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Click empty cell to add machine. Click machine to edit/remove.</p>
+      <div id="grid-{{ lab.id }}" class="lab-grid" data-cols="{{ lab.grid_columns }}" data-lab-id="{{ lab.id }}">
+        {% for machine in lab.machines.all %}
+        <div class="machine-data" data-name="{{ machine.name }}" data-status="{{ machine.status }}" data-id="{{ machine.id }}" data-row="{{ machine.grid_row }}" data-col="{{ machine.grid_col }}"></div>
         {% endfor %}
       </div>
+      </div>
+      <style>
+        #grid-{{ lab.id }}{gap:6px;max-width:800px}
+        #grid-{{ lab.id }} .grid-cell{background:var(--bg);border:1.5px dashed var(--border);border-radius:8px;padding:6px;text-align:center;cursor:pointer;transition:all .15s;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow:hidden}
+        #grid-{{ lab.id }} .grid-cell:hover{border-color:var(--brand);background:rgba(79,70,229,.03)}
+        #grid-{{ lab.id }} .machine-cell{border-style:solid;background:var(--surface)}
+        #grid-{{ lab.id }} .machine-cell:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);transform:scale(1.03)}
+      </style>
     </div>
     {% empty %}
     <div class="card card-pad" style="text-align:center;padding:40px">
@@ -103,7 +110,7 @@
       {% csrf_token %}
       <div><label class="field-label">Lab Name</label><input class="input" name="name" placeholder="e.g. CL5" required/></div>
       <div><label class="field-label">Location</label><input class="input" name="location" placeholder="e.g. CL3 Building, Room 204"/></div>
-      <div><label class="field-label">Number of Machines</label><input class="input" name="machine_count" type="number" min="1" max="100" value="20" required/></div>
+      <div><label class="field-label">Grid Columns</label><input class="input" name="grid_columns" type="number" min="2" max="20" value="8" required/></div>
       <div style="display:flex;gap:10px">
         <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined">add</span>Create Lab</button>
         <button class="btn btn-secondary" type="button" onclick="document.getElementById('add-lab-modal').style.display='none'">Cancel</button>
@@ -144,6 +151,31 @@
   </div>
 </div>
 
+<div id="add-machine-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
+  <div class="card card-pad" style="width:100%;max-width:400px;margin:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <p class="card-title" style="margin:0">Add Machine</p>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-machine-modal').style.display='none'"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <form method="post" action="{% url 'machine_create' %}" style="display:flex;flex-direction:column;gap:12px">
+      {% csrf_token %}
+      <input type="hidden" name="lab_id" id="add-machine-lab-id"/>
+      <input type="hidden" name="grid_row" id="add-machine-row"/>
+      <input type="hidden" name="grid_col" id="add-machine-col"/>
+      <div><label class="field-label">Machine Name</label><input class="input" name="name" placeholder="e.g. CL3-PC01" required/></div>
+      <div><label class="field-label">Status</label>
+        <select class="input" name="status">
+          <option value="HEALTHY" selected>Healthy</option>
+          <option value="FLAGGED">Flagged</option>
+          <option value="IN_REPAIR">In Repair</option>
+          <option value="DOWN">Down</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" type="submit" style="width:100%"><span class="material-symbols-outlined">add</span>Add Machine</button>
+    </form>
+  </div>
+</div>
+
 <script>
 function openMachineModal(name, status, id){
   var modal = document.getElementById('machine-modal');
@@ -162,21 +194,83 @@ function openMachineModal(name, status, id){
     '<p style="margin:4px 0 0;font-size:13px;color:var(--text-secondary)">Current status: <strong style="color:var(--text)">' + (statusLabels[st]||status) + '</strong></p></div>' +
     '<form method="post" action="/labs/machine/' + id + '/update/" style="display:flex;flex-direction:column;gap:12px">' +
     '{% csrf_token %}' +
-    '<div><label class="field-label">Update Status</label>' +
+    '<div><label class="field-label">Machine Name</label>' +
+    '<input class="input" name="name" value="' + name + '" required/></div>' +
+    '<div><label class="field-label">Status</label>' +
     '<select class="input" name="status">' +
     '<option value="HEALTHY"' + (st==='healthy'?' selected':'') + '>Healthy</option>' +
     '<option value="FLAGGED"' + (st==='flagged'?' selected':'') + '>Flagged</option>' +
     '<option value="IN_REPAIR"' + (st==='inrepair'?' selected':'') + '>In Repair</option>' +
     '<option value="DOWN"' + (st==='down'?' selected':'') + '>Down</option>' +
     '</select></div>' +
-    '<button class="btn btn-primary btn-sm" type="submit" style="width:100%"><span class="material-symbols-outlined">save</span>Update Status</button>' +
-    '</form>';
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-primary btn-sm" type="submit" style="flex:1"><span class="material-symbols-outlined">save</span>Update</button>' +
+    '<a href="/labs/machine/' + id + '/delete/" onclick="return confirm(\'Delete this machine?\')" class="btn btn-outline-danger btn-sm" style="flex:0"><span class="material-symbols-outlined">delete</span></a>' +
+    '</div></form>';
   
   modal.style.display = 'flex';
 }
 
+function clickEmptyCell(labId, row, col){
+  document.getElementById('add-machine-lab-id').value = labId;
+  document.getElementById('add-machine-row').value = row;
+  document.getElementById('add-machine-col').value = col;
+  document.getElementById('add-machine-modal').style.display = 'flex';
+}
+
 document.addEventListener('click', function(e){
-  if(e.target.id === 'machine-modal') document.getElementById('machine-modal').style.display = 'none';
+  if(e.target.id === 'machine-modal' || e.target.id === 'add-machine-modal'){
+    e.target.style.display = 'none';
+  }
+});
+
+// Render all lab grids
+document.querySelectorAll('.lab-grid').forEach(function(grid){
+  var cols = parseInt(grid.dataset.cols) || 8;
+  var labId = grid.dataset.labId;
+  var machineData = grid.querySelectorAll('.machine-data');
+  
+  // Build machine map
+  var machines = {};
+  var maxRow = 0;
+  machineData.forEach(function(d){
+    var m = {name:d.dataset.name, status:d.dataset.status, id:d.dataset.id, row:parseInt(d.dataset.row), col:parseInt(d.dataset.col)};
+    machines[m.row+'_'+m.col] = m;
+    if(m.row > maxRow) maxRow = m.row;
+  });
+  
+  // Render grid
+  grid.style.display = 'grid';
+  grid.style.gridTemplateColumns = 'repeat('+cols+', 1fr)';
+  grid.style.gap = '6px';
+  grid.style.maxWidth = '800px';
+  grid.innerHTML = '';
+  
+  for(var r = 0; r <= maxRow; r++){
+    for(var c = 0; c < cols; c++){
+      var m = machines[r+'_'+c];
+      if(m){
+        var st = m.status.toLowerCase().replace('_','');
+        var colors = {healthy:'var(--success)',flagged:'var(--warning)',down:'var(--danger)',inrepair:'var(--st-progress)'};
+        var icons = {healthy:'check_circle',flagged:'warning',down:'error',inrepair:'build'};
+        var div = document.createElement('div');
+        div.className = 'grid-cell machine-cell';
+        div.style.cssText = 'background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px;text-align:center;cursor:pointer;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow:hidden;transition:all .15s';
+        div.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;color:'+(colors[st]||'var(--success)')+'">'+(icons[st]||'check_circle')+'</span><span style="font-size:10px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.name+'</span>';
+        div.onclick = (function(name,status,id){return function(e){e.stopPropagation();openMachineModal(name,status,id)}})(m.name,m.status,m.id);
+        div.onmouseover = function(){this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)';this.style.transform='scale(1.03)'};
+        div.onmouseout = function(){this.style.boxShadow='none';this.style.transform='none'};
+        grid.appendChild(div);
+      } else {
+        var empty = document.createElement('div');
+        empty.style.cssText = 'background:var(--bg);border:1.5px dashed var(--border);border-radius:8px;height:64px;cursor:pointer;transition:all .15s';
+        empty.onmouseover = function(){this.style.borderColor='var(--brand)';this.style.background='rgba(79,70,229,.03)'};
+        empty.onmouseout = function(){this.style.borderColor='var(--border)';this.style.background='var(--bg)'};
+        empty.onclick = (function(lid,row,col){return function(e){e.stopPropagation();clickEmptyCell(lid,row,col)}})(labId,r,c);
+        grid.appendChild(empty);
+      }
+    }
+  }
 });
 </script>
 {% endblock %}

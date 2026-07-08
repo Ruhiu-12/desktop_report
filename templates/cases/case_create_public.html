@@ -53,27 +53,8 @@
     <div id="view-pick-lab">
       <p class="card-title" style="margin-bottom:2px">Which lab are you in?</p>
       <p class="card-sub">Select your computer lab to see the floor layout.</p>
-      <div class="lab-picker" style="margin-top:16px">
-        <div class="lab-card" onclick="selectLab('CL1')" data-lab="CL1">
-          <div class="lab-icon"><span class="material-symbols-outlined" style="font-size:24px">computer</span></div>
-          <div class="lab-name">CL1</div>
-          <div class="lab-info">16 machines</div>
-        </div>
-        <div class="lab-card" onclick="selectLab('CL2')" data-lab="CL2">
-          <div class="lab-icon"><span class="material-symbols-outlined" style="font-size:24px">computer</span></div>
-          <div class="lab-name">CL2</div>
-          <div class="lab-info">20 machines</div>
-        </div>
-        <div class="lab-card" onclick="selectLab('CL3')" data-lab="CL3">
-          <div class="lab-icon"><span class="material-symbols-outlined" style="font-size:24px">computer</span></div>
-          <div class="lab-name">CL3</div>
-          <div class="lab-info">11 machines</div>
-        </div>
-        <div class="lab-card" onclick="selectLab('CL4')" data-lab="CL4">
-          <div class="lab-icon"><span class="material-symbols-outlined" style="font-size:24px">computer</span></div>
-          <div class="lab-name">CL4</div>
-          <div class="lab-info">24 machines</div>
-        </div>
+      <div class="lab-picker" style="margin-top:16px" id="lab-picker-grid">
+        <p style="color:var(--ink-faint);font-size:13px;grid-column:1/-1;text-align:center;padding:16px">Loading labs...</p>
       </div>
     </div>
     <div id="view-floor" style="display:none">
@@ -149,27 +130,40 @@ var labsLoaded = false;
 
 var icons = {healthy:'check_circle', flagged:'warning', down:'error', inrepair:'build'};
 var labels = {healthy:'Healthy', flagged:'Flagged', down:'Down', inrepair:'In Repair'};
+var cssClass = {healthy:'ok', flagged:'warn', down:'down', inrepair:'busy'};
 
 function loadLabsFromAPI(){
   if(labsLoaded) return Promise.resolve();
   return fetch('/labs/api/machines/')
     .then(function(r){return r.json()})
     .then(function(data){
+      labs = {};
+      var grid = document.getElementById('lab-picker-grid');
+      if(data.labs.length === 0){
+        grid.innerHTML = '<p style="color:var(--ink-faint);font-size:13px;grid-column:1/-1;text-align:center;padding:24px">No labs available yet. Please check back later.</p>';
+        labsLoaded = true;
+        return;
+      }
+      var html = '';
       data.labs.forEach(function(lab){
-        var statuses = [];
-        lab.machines.forEach(function(m){statuses.push(m.status)});
-        labs[lab.name] = {count:lab.machine_count, statuses:statuses, location:lab.location};
+        var machines = [];
+        lab.machines.forEach(function(m){
+          machines.push({name:m.name, status:m.status});
+        });
+        labs[lab.name] = {machines:machines, location:lab.location};
+        html += '<div class="lab-card" onclick="selectLab(\''+lab.name+'\')" data-lab="'+lab.name+'">'+
+          '<div class="lab-icon"><span class="material-symbols-outlined" style="font-size:24px">computer</span></div>'+
+          '<div class="lab-name">'+lab.name+'</div>'+
+          '<div class="lab-info">'+lab.machine_count+' machines</div>'+
+          '</div>';
       });
-      // Update lab cards with real data
-      document.querySelectorAll('.lab-card').forEach(function(card){
-        var name = card.getAttribute('data-lab');
-        if(labs[name]){
-          card.querySelector('.lab-info').textContent = labs[name].count + ' machines';
-        }
-      });
+      grid.innerHTML = html;
       labsLoaded = true;
     })
-    .catch(function(e){console.error('Failed to load labs:', e)});
+    .catch(function(e){
+      console.error('Failed to load labs:', e);
+      document.getElementById('lab-picker-grid').innerHTML = '<p style="color:var(--danger);font-size:13px;grid-column:1/-1;text-align:center;padding:24px">Failed to load labs. Please refresh.</p>';
+    });
 }
 
 function selectLab(name){
@@ -195,14 +189,41 @@ function renderGrid(name){
   var grid = document.getElementById('floor-grid');
   grid.innerHTML = '';
   var lab = labs[name];
-  for(var i = 1; i <= lab.count; i++){
-    var id = name + '-PC' + String(i).padStart(2,'0');
-    var st = lab.statuses[i-1];
-    grid.innerHTML += '<div class="floor-tile '+st+'" onclick="pickMachine(\''+id+'\')" data-pc="'+id+'">'+
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
-      '<span class="tile-id">'+id+'</span>'+
-      '<span class="material-symbols-outlined tile-icon" style="font-size:16px">'+icons[st]+'</span>'+
-      '</div><span class="tile-status">'+labels[st]+'</span></div>';
+  if(!lab || !lab.machines || lab.machines.length === 0){
+    grid.innerHTML = '<p style="color:var(--ink-faint);font-size:13px;grid-column:1/-1;text-align:center;padding:24px">No machines in this lab yet.</p>';
+    grid.style.gridTemplateColumns = '1fr';
+    return;
+  }
+  var cols = lab.grid_columns || 8;
+  grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+  
+  // Build a map of occupied cells
+  var occupied = {};
+  lab.machines.forEach(function(m){
+    occupied[m.row + '_' + m.col] = m;
+  });
+  
+  // Find max row
+  var maxRow = 0;
+  lab.machines.forEach(function(m){ if(m.row > maxRow) maxRow = m.row; });
+  
+  // Render grid cells
+  for(var r = 0; r <= maxRow; r++){
+    for(var c = 0; c < cols; c++){
+      var key = r + '_' + c;
+      var m = occupied[key];
+      if(m){
+        var st = m.status;
+        var cc = cssClass[st] || 'ok';
+        grid.innerHTML += '<div class="floor-tile '+cc+'" onclick="pickMachine(\''+m.name+'\')" data-pc="'+m.name+'" style="cursor:pointer">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+          '<span class="tile-id">'+m.name+'</span>'+
+          '<span class="material-symbols-outlined tile-icon" style="font-size:16px">'+(icons[st]||'check_circle')+'</span>'+
+          '</div><span class="tile-status">'+(labels[st]||'Healthy')+'</span></div>';
+      } else {
+        grid.innerHTML += '<div style="background:var(--bg);border:1px dashed var(--border);border-radius:6px;min-height:48px"></div>';
+      }
+    }
   }
 }
 

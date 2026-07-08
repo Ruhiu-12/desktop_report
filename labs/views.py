@@ -25,16 +25,10 @@ def lab_create(request):
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         location = request.POST.get('location', '').strip()
-        machine_count = int(request.POST.get('machine_count', 20))
+        grid_columns = int(request.POST.get('grid_columns', 8))
         if name:
-            lab = Lab.objects.create(name=name, location=location)
-            for i in range(1, machine_count + 1):
-                Machine.objects.create(
-                    lab=lab,
-                    name=f"{name}-PC{str(i).zfill(2)}",
-                    status='HEALTHY'
-                )
-            messages.success(request, f'Lab {name} created with {machine_count} machines.')
+            lab = Lab.objects.create(name=name, location=location, grid_columns=grid_columns)
+            messages.success(request, f'Lab {name} created. Add machines by clicking empty cells.')
     return redirect('lab_list')
 
 
@@ -56,11 +50,52 @@ def machine_update(request, machine_id):
         return HttpResponseForbidden("You do not have permission.")
     machine = get_object_or_404(Machine, id=machine_id)
     if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
         status = request.POST.get('status', '')
+        if name:
+            machine.name = name
         if status in dict(Machine.STATUS_CHOICES):
             machine.status = status
+        try:
             machine.save()
-            messages.success(request, f'{machine.name} status updated to {machine.get_status_display()}.')
+            messages.success(request, f'{machine.name} updated.')
+        except Exception:
+            messages.error(request, 'Machine name already exists in this lab.')
+    return redirect('lab_list')
+
+
+@login_required
+def machine_create(request):
+    if not _is_admin(request.user):
+        return HttpResponseForbidden("You do not have permission.")
+    if request.method == 'POST':
+        lab_id = request.POST.get('lab_id')
+        name = request.POST.get('name', '').strip()
+        status = request.POST.get('status', 'HEALTHY')
+        grid_row = int(request.POST.get('grid_row', 0))
+        grid_col = int(request.POST.get('grid_col', 0))
+        lab = get_object_or_404(Lab, id=lab_id)
+        if name:
+            try:
+                Machine.objects.create(
+                    lab=lab, name=name, status=status,
+                    grid_row=grid_row, grid_col=grid_col
+                )
+                messages.success(request, f'{name} added to {lab.name}.')
+            except Exception:
+                messages.error(request, 'Machine name already exists in this lab.')
+    return redirect('lab_list')
+
+
+@login_required
+def machine_delete(request, machine_id):
+    if not _is_admin(request.user):
+        return HttpResponseForbidden("You do not have permission.")
+    machine = get_object_or_404(Machine, id=machine_id)
+    if request.method == 'POST':
+        name = machine.name
+        machine.delete()
+        messages.success(request, f'{name} deleted.')
     return redirect('lab_list')
 
 
