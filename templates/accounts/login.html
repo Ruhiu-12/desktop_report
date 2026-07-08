@@ -1,53 +1,58 @@
-{% extends "base_simple.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - TechDesk Reporter</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="{% static 'css/design-system-v2.css' %}" rel="stylesheet"/>
+<style>.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}</style>
+</head>
+<body>
 
-{% block title %}Login | TechDesk Reporter{% endblock %}
-
-{% block content %}
-<div class="bg-white rounded-2xl shadow-xl p-8">
-    <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-brand-50 rounded-xl mb-4">
-            <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-        </div>
-        <h1 class="text-2xl font-bold text-gray-900">TechDesk Reporter</h1>
-        <p class="text-gray-500 text-sm mt-1">Sign in to your account</p>
+<div class="auth-shell">
+  <div class="auth-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:26px">
+      <div style="width:40px;height:40px;border-radius:11px;background:var(--brand);display:flex;align-items:center;justify-content:center">
+        <span class="material-symbols-outlined" style="color:#fff">bolt</span>
+      </div>
+      <div>
+        <div class="font-display" style="font-weight:800;font-size:16.5px;line-height:1.1">TechDesk Reporter</div>
+        <div style="font-size:11.5px;color:var(--ink-faint)">CL3 Computer Lab Fault Desk</div>
+      </div>
     </div>
-
-    <form method="post" action="{% url 'login' %}" class="space-y-5">
-        {% csrf_token %}
-
-        <div>
-            <label for="identifier" class="block text-sm font-medium text-gray-700 mb-1">Admission Number</label>
-            <input type="text" id="identifier" name="identifier" placeholder="Enter your admission number" required
-                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
-        </div>
-
-        <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required
-                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
-        </div>
-
-        <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input type="checkbox" name="remember" class="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500">
-                Remember me
-            </label>
-            <a href="{% url 'forgot_password' %}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Forgot password?</a>
-        </div>
-
-        <button type="submit"
-                class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg text-sm transition focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
-            Login
-        </button>
+    <h2 style="margin:0 0 4px;font-size:21px">Welcome back</h2>
+    <p style="margin:0 0 22px;font-size:13px;color:var(--ink-faint)">Sign in to report or track a lab computer issue.</p>
+    {% if messages %}
+    {% for message in messages %}
+    <div style="background:{% if 'error' in message.tags %}#FEF2F2;border:1px solid #FEE2E2{% elif 'warning' in message.tags %}#FFFBEB;border:1px solid #FEF3C7{% elif 'success' in message.tags %}#ECFDF5;border:1px solid #D1FAE5{% else %}#EFF6FF;border:1px solid #DBEAFE{% endif %};border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:{% if 'error' in message.tags %}#B91C1C{% elif 'warning' in message.tags %}#92400E{% elif 'success' in message.tags %}#065F46{% else %}#1E40AF{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <div style="margin-bottom:15px">
+        <label class="field-label">Admission Number</label>
+        <div class="input-icon-wrap"><span class="material-symbols-outlined">badge</span>
+          <input class="input" name="identifier" placeholder="e.g. SC211/0142/2023" type="text" required/></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label class="field-label">Password</label>
+        <div class="input-icon-wrap"><span class="material-symbols-outlined">lock</span>
+          <input class="input" name="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226" type="password" required/></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 20px">
+        <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft)">
+          <input style="accent-color:var(--brand)" type="checkbox" name="remember"/> Remember me</label>
+        <a href="{% url 'forgot_password' %}" style="font-size:12.5px;color:var(--brand-dark);font-weight:700">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Log in</button>
     </form>
-
-    <div class="mt-6 text-center">
-        <p class="text-sm text-gray-500">Don't have an account?
-            <a href="{% url 'register' %}" class="text-brand-600 hover:text-brand-700 font-medium">Register here</a>
-        </p>
-         </div>
-         
+    <p style="text-align:center;font-size:12.5px;color:var(--ink-faint);margin-top:22px">
+      Don't have an account? <a href="{% url 'register' %}" style="color:var(--brand-dark);font-weight:700">Register here</a></p>
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>

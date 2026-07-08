@@ -1,147 +1,211 @@
-{% extends "base.html" %}
-
+{% extends "base_v2.html" %}
 {% block title %}Dashboard | TechDesk Reporter{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block page_head %}
+<div class="page-head">
+  <p class="page-eyebrow">CL3 Fault Desk</p>
+  <h1 style="margin:0;font-size:26px;font-weight:800">
+    {% if user_role == 'Admin' %}System Board
+    {% elif user_role == 'Technician' %}Technician Queue
+    {% else %}My Dashboard{% endif %}
+  </h1>
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
 
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">
-            {% if user_role == 'superadmin' %}System Administrator Dashboard
-            {% elif user_role == 'admin' %}Administrator Dashboard
-            {% elif user_role == 'technician' %}Technician Dashboard
-            {% elif user_role == 'analyst' %}Analyst Dashboard
-            {% else %}My Dashboard
-            {% endif %}
-        </h1>
-        <p class="text-gray-500 mt-1">Welcome back, {{ user.identifier }}</p>
+{% if user_role == 'Admin' %}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+  <div class="stat-card" style="border-left:4px solid #3B82F6">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ total_cases }}</div><div class="stat-label">Total Cases</div></div>
+      <div class="stat-icon" style="background:#3B82F620;color:#3B82F6"><span class="material-symbols-outlined">dns</span></div>
     </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {% if user_role == 'superadmin' or user_role == 'admin' %}
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-            <div class="text-sm font-medium text-gray-500">Total Cases</div>
-            <div class="mt-2 text-3xl font-bold text-gray-900">{{ total_cases }}</div>
-        </div>
-        {% if user_role == 'superadmin' %}
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
-            <div class="text-sm font-medium text-gray-500">Total Users</div>
-            <div class="mt-2 text-3xl font-bold text-gray-900">{{ total_users }}</div>
-        </div>
-        {% endif %}
-        {% if user_role == 'admin' %}
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-            <div class="text-sm font-medium text-gray-500">Pending Approvals</div>
-            <div class="mt-2 text-3xl font-bold text-yellow-600">{{ pending_approvals }}</div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-            <div class="text-sm font-medium text-gray-500">Active Cases</div>
-            <div class="mt-2 text-3xl font-bold text-green-600">{{ active_cases }}</div>
-        </div>
-        {% endif %}
-        {% endif %}
-
-        {% if user_role == 'technician' %}
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-            <div class="text-sm font-medium text-gray-500">My Cases</div>
-            <div class="mt-2 text-3xl font-bold text-gray-900">{{ my_cases }}</div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
-            <div class="text-sm font-medium text-gray-500">Assigned to Me</div>
-            <div class="mt-2 text-3xl font-bold text-orange-600">{{ assigned_to_me }}</div>
-        </div>
-        {% endif %}
-
-        {% if user_role == 'analyst' %}
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-            <div class="text-sm font-medium text-gray-500">Pending Analysis</div>
-            <div class="mt-2 text-3xl font-bold text-blue-600">{{ pending_analysis }}</div>
-        </div>
-        {% endif %}
-
-        {% if user_role == 'user' %}
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-            <div class="text-sm font-medium text-gray-500">My Cases</div>
-            <div class="mt-2 text-3xl font-bold text-gray-900">{{ my_cases }}</div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
-            <div class="text-sm font-medium text-gray-500">Open Cases</div>
-            <div class="mt-2 text-3xl font-bold text-orange-600">{{ open_cases }}</div>
-        </div>
-        {% endif %}
+  </div>
+  <div class="stat-card" style="border-left:4px solid #10B981">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ total_users }}</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-icon" style="background:#10B98120;color:#10B981"><span class="material-symbols-outlined">group</span></div>
     </div>
-
-    <!-- Recent Cases Table -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-800">
-                {% if user_role == 'technician' %}Assigned Cases
-                {% elif user_role == 'analyst' %}Cases Pending Review
-                {% else %}Recent Cases
-                {% endif %}
-            </h2>
-        </div>
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for case in recent_cases %}
-                <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='{% url 'case_detail' case_id=case.id %}'">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">{{ case.title }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        {% if case.status == 'NEW' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">New</span>
-                        {% elif case.status == 'ASSIGNED' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Assigned</span>
-                        {% elif case.status == 'IN_PROGRESS' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">In Progress</span>
-                        {% elif case.status == 'PENDING_REVIEW' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Pending Review</span>
-                        {% elif case.status == 'CLOSED' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Closed</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        {% if case.case_priority == 'CRITICAL' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Critical</span>
-                        {% elif case.case_priority == 'HIGH' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">High</span>
-                        {% elif case.case_priority == 'MEDIUM' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Medium</span>
-                        {% elif case.case_priority == 'LOW' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Low</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ case.created_by.identifier }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ case.created_at|date:"M d, Y" }}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">
-                        No cases found.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="px-6 py-3 border-t border-gray-200">
-            <a href="{% url 'case_list' %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View all cases →</a>
-        </div>
+  </div>
+  <div class="stat-card" style="border-left:4px solid #F59E0B">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ pending_approvals }}</div><div class="stat-label">Pending Review</div></div>
+      <div class="stat-icon" style="background:#F59E0B20;color:#F59E0B"><span class="material-symbols-outlined">pending</span></div>
     </div>
+  </div>
+  <div class="stat-card" style="border-left:4px solid #8B5CF6">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ active_cases }}</div><div class="stat-label">In Progress</div></div>
+      <div class="stat-icon" style="background:#8B5CF620;color:#8B5CF6"><span class="material-symbols-outlined">build</span></div>
+    </div>
+  </div>
 </div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px">
+  <a href="{% url 'case_list' %}" class="card card-pad" style="text-decoration:none;cursor:pointer;transition:all .2s;border:1px solid var(--border)" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="stat-icon" style="background:rgba(79,70,229,.1);color:var(--brand)"><span class="material-symbols-outlined">list_alt</span></div>
+      <div><p style="margin:0;font-weight:700;font-size:15px">View All Cases</p><p style="margin:2px 0 0;font-size:12.5px;color:var(--text-secondary)">Manage and track all issues</p></div>
+    </div>
+  </a>
+  <a href="{% url 'lab_list' %}" class="card card-pad" style="text-decoration:none;cursor:pointer;transition:all .2s;border:1px solid var(--border)" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="stat-icon" style="background:rgba(139,92,246,.1);color:#8B5CF6"><span class="material-symbols-outlined">computer</span></div>
+      <div><p style="margin:0;font-weight:700;font-size:15px">Manage Labs</p><p style="margin:2px 0 0;font-size:12.5px;color:var(--text-secondary)">Add labs, edit machines</p></div>
+    </div>
+  </a>
+  <a href="{% url 'user_list' %}" class="card card-pad" style="text-decoration:none;cursor:pointer;transition:all .2s;border:1px solid var(--border)" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="stat-icon" style="background:rgba(16,185,129,.1);color:#10B981"><span class="material-symbols-outlined">group</span></div>
+      <div><p style="margin:0;font-weight:700;font-size:15px">Manage Users</p><p style="margin:2px 0 0;font-size:12.5px;color:var(--text-secondary)">View, edit roles, delete</p></div>
+    </div>
+  </a>
+</div>
+
+<div class="card card-pad">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <p class="card-title" style="margin:0">Recent Activity</p>
+    <a href="{% url 'case_list' %}" style="color:var(--brand-dark);font-weight:700;font-size:13px">View all →</a>
+  </div>
+  <table class="dtable">
+    <thead><tr><th>Issue</th><th>Status</th><th>Priority</th><th>Reported By</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for case in recent_cases %}
+      <tr class="row-link" onclick="location.href='{% url 'case_detail' case.id %}'">
+        <td><div style="font-weight:600">{{ case.title }}</div></td>
+        <td><span class="badge badge-{% if case.status == 'NEW' %}new{% elif case.status == 'ASSIGNED' %}assigned{% elif case.status == 'IN_PROGRESS' %}progress{% elif case.status == 'WAITING_REPORT' %}review{% elif case.status == 'PENDING_REVIEW' %}review{% else %}closed{% endif %}">{{ case.get_status_display }}</span></td>
+        <td><span class="chip-priority chip-{{ case.case_priority|lower }}">{{ case.get_case_priority_display }}</span></td>
+        <td>{% if case.created_by %}{{ case.created_by.get_full_name|default:case.created_by.identifier }}{% else %}Anonymous{% endif %}</td>
+        <td style="color:var(--ink-faint)">{{ case.created_at|date:"M d" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center;color:var(--ink-faint);padding:32px">No cases yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% elif user_role == 'Technician' %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px">
+  <div class="stat-card" style="border-left:4px solid #8B5CF6">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ my_cases_count }}</div><div class="stat-label">My Cases</div></div>
+      <div class="stat-icon" style="background:#8B5CF620;color:#8B5CF6"><span class="material-symbols-outlined">build</span></div>
+    </div>
+  </div>
+  <div class="stat-card" style="border-left:4px solid #F59E0B">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ assigned_count }}</div><div class="stat-label">Assigned to Me</div></div>
+      <div class="stat-icon" style="background:#F59E0B20;color:#F59E0B"><span class="material-symbols-outlined">assignment_ind</span></div>
+    </div>
+  </div>
+  <div class="stat-card" style="border-left:4px solid #10B981">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ closed_week_count }}</div><div class="stat-label">Closed This Week</div></div>
+      <div class="stat-icon" style="background:#10B98120;color:#10B981"><span class="material-symbols-outlined">task_alt</span></div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px">
+  <a href="{% url 'case_list' %}" class="card card-pad" style="text-decoration:none;cursor:pointer;transition:all .2s;border:1px solid var(--border)" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="stat-icon" style="background:rgba(79,70,229,.1);color:var(--brand)"><span class="material-symbols-outlined">list_alt</span></div>
+      <div><p style="margin:0;font-weight:700;font-size:15px">My Cases</p><p style="margin:2px 0 0;font-size:12.5px;color:var(--text-secondary)">View all cases assigned to you</p></div>
+    </div>
+  </a>
+  <a href="{% url 'report_list' %}" class="card card-pad" style="text-decoration:none;cursor:pointer;transition:all .2s;border:1px solid var(--border)" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="stat-icon" style="background:rgba(245,158,11,.1);color:#F59E0B"><span class="material-symbols-outlined">description</span></div>
+      <div><p style="margin:0;font-weight:700;font-size:15px">My Reports</p><p style="margin:2px 0 0;font-size:12.5px;color:var(--text-secondary)">Submitted repair reports</p></div>
+    </div>
+  </a>
+</div>
+
+<div class="card card-pad">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <p class="card-title" style="margin:0">My Assigned Cases</p>
+    <a href="{% url 'case_list' %}" style="color:var(--brand-dark);font-weight:700;font-size:13px">View all →</a>
+  </div>
+  <table class="dtable">
+    <thead><tr><th>Issue</th><th>Status</th><th>Priority</th><th>Reported By</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for case in recent_cases %}
+      <tr class="row-link" onclick="location.href='{% url 'case_detail' case.id %}'">
+        <td><div style="font-weight:600">{{ case.title }}</div></td>
+        <td><span class="badge badge-{% if case.status == 'NEW' %}new{% elif case.status == 'ASSIGNED' %}assigned{% elif case.status == 'IN_PROGRESS' %}progress{% elif case.status == 'WAITING_REPORT' %}review{% elif case.status == 'PENDING_REVIEW' %}review{% else %}closed{% endif %}">{{ case.get_status_display }}</span></td>
+        <td><span class="chip-priority chip-{{ case.case_priority|lower }}">{{ case.get_case_priority_display }}</span></td>
+        <td>{% if case.created_by %}{{ case.created_by.get_full_name|default:case.created_by.identifier }}{% else %}Anonymous{% endif %}</td>
+        <td style="color:var(--ink-faint)">{{ case.created_at|date:"M d" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center;color:var(--ink-faint);padding:32px">No cases assigned to you yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px">
+  <div class="stat-card" style="border-left:4px solid #3B82F6">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ my_cases_count }}</div><div class="stat-label">My Reports</div></div>
+      <div class="stat-icon" style="background:#3B82F620;color:#3B82F6"><span class="material-symbols-outlined">dns</span></div>
+    </div>
+  </div>
+  <div class="stat-card" style="border-left:4px solid #F59E0B">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ open_cases }}</div><div class="stat-label">Open</div></div>
+      <div class="stat-icon" style="background:#F59E0B20;color:#F59E0B"><span class="material-symbols-outlined">pending</span></div>
+    </div>
+  </div>
+  <div class="stat-card" style="border-left:4px solid #10B981">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div class="stat-num">{{ resolved_cases }}</div><div class="stat-label">Resolved</div></div>
+      <div class="stat-icon" style="background:#10B98120;color:#10B981"><span class="material-symbols-outlined">check_circle</span></div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px">
+  <a href="{% url 'case_create' %}" class="card card-pad" style="text-decoration:none;cursor:pointer;transition:all .2s;border:1px solid var(--border);background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 100%);color:white" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:24px">report</span></div>
+      <div><p style="margin:0;font-weight:700;font-size:15px">Report New Issue</p><p style="margin:2px 0 0;font-size:12.5px;opacity:.8">Tap a machine and describe the problem</p></div>
+    </div>
+  </a>
+  <a href="{% url 'case_list' %}" class="card card-pad" style="text-decoration:none;cursor:pointer;transition:all .2s;border:1px solid var(--border)" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="stat-icon" style="background:rgba(79,70,229,.1);color:var(--brand)"><span class="material-symbols-outlined">list_alt</span></div>
+      <div><p style="margin:0;font-weight:700;font-size:15px">My Cases</p><p style="margin:2px 0 0;font-size:12.5px;color:var(--text-secondary)">Track your reported issues</p></div>
+    </div>
+  </a>
+</div>
+
+<div class="card card-pad">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <p class="card-title" style="margin:0">My Recent Reports</p>
+    <a href="{% url 'case_list' %}" style="color:var(--brand-dark);font-weight:700;font-size:13px">View all →</a>
+  </div>
+  <table class="dtable">
+    <thead><tr><th>Issue</th><th>Status</th><th>Priority</th><th>Technician</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for case in recent_cases %}
+      <tr class="row-link" onclick="location.href='{% url 'case_detail' case.id %}'">
+        <td><div style="font-weight:600">{{ case.title }}</div></td>
+        <td><span class="badge badge-{% if case.status == 'NEW' %}new{% elif case.status == 'ASSIGNED' %}assigned{% elif case.status == 'IN_PROGRESS' %}progress{% elif case.status == 'WAITING_REPORT' %}review{% elif case.status == 'PENDING_REVIEW' %}review{% else %}closed{% endif %}">{{ case.get_status_display }}</span></td>
+        <td><span class="chip-priority chip-{{ case.case_priority|lower }}">{{ case.get_case_priority_display }}</span></td>
+        <td>{% if case.technician %}{{ case.technician.get_full_name|default:case.technician.identifier }}{% else %}—{% endif %}</td>
+        <td style="color:var(--ink-faint)">{{ case.created_at|date:"M d" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center;color:var(--ink-faint);padding:32px">No reports yet. <a href="{% url 'case_create' %}" style="color:var(--brand-dark);font-weight:600">Report your first issue →</a></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
 {% endblock %}

@@ -16,7 +16,7 @@ class Feedback(models.Model):
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='feedback_submissions')
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='feedback_submissions')
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='OPEN')
     admin_response = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

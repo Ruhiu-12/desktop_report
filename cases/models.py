@@ -13,12 +13,14 @@ class Case(models.Model):
         ('NEW', 'New'),
         ('ASSIGNED', 'Assigned'),
         ('IN_PROGRESS', 'In Progress'),
+        ('WAITING_REPORT', 'Waiting for Report'),
         ('PENDING_REVIEW', 'Pending Review'),
         ('CLOSED', 'Closed'),
     ]
 
     title = models.CharField(max_length=200)
     description = models.TextField()
+    asset_tag = models.CharField(max_length=50, blank=True, default='', help_text='Machine identifier e.g. CL3-PC01')
     image = models.ImageField(upload_to='cases/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
     case_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
@@ -26,7 +28,9 @@ class Case(models.Model):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='reported_cases'
     )
 

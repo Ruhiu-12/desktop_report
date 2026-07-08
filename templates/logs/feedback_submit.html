@@ -1,54 +1,45 @@
-{% extends "base.html" %}
-
+{% extends "base_v2.html" %}
 {% block title %}Submit Feedback | TechDesk Reporter{% endblock %}
 
+{% block page_head %}
+<div class="page-head">
+  <p class="page-eyebrow">CL3 Fault Desk</p>
+  <h1 style="margin:0;font-size:26px;font-weight:800">Site Feedback</h1>
+</div>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <a href="{% url 'dashboard' %}" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        Back to Dashboard
-    </a>
-
-    <div class="bg-white rounded-lg shadow p-6">
-        <h1 class="text-xl font-bold text-gray-900 mb-6">Report a Bug or Request a Feature</h1>
-
-        <form method="post" action="{% url 'feedback_submit' %}">
-            {% csrf_token %}
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                <div class="flex gap-4">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="radio" name="type" value="BUG" checked class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500">
-                        <span class="ml-2 text-sm text-gray-700">Bug Report</span>
-                    </label>
-                    <label class="flex items-center cursor-pointer">
-                        <input type="radio" name="type" value="FEATURE" class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">Feature Request</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input type="text" id="title" name="title" required maxlength="200"
-                    placeholder="Brief summary of the issue or request"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-            </div>
-
-            <div class="mb-6">
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea id="description" name="description" required rows="6"
-                    placeholder="Provide as much detail as possible..."
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Submit Feedback
-            </button>
-        </form>
+<p style="font-size:14px;color:var(--text-secondary);margin-bottom:18px">Report bugs or suggest features for this website.</p>
+<div class="card card-pad" style="max-width:560px">
+  {% if form.non_field_errors %}
+  <div style="background:#FEF2F2;border:1px solid #FEE2E2;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#B91C1C">
+    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+  </div>
+  {% endif %}
+  <form method="post" action="{% url 'feedback_submit' %}" style="display:flex;flex-direction:column;gap:16px">
+    {% csrf_token %}
+    <div>
+      <label class="field-label">Type</label>
+      <div style="display:flex;gap:16px">
+        {% for radio in form.type %}
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+          {{ radio.tag }} <span>{{ radio.choice_label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% if form.type.errors %}<p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.type.errors.0 }}</p>{% endif %}
     </div>
+    <div>
+      <label class="field-label">Title</label>
+      {{ form.title }}
+      {% if form.title.errors %}<p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.title.errors.0 }}</p>{% endif %}
+    </div>
+    <div>
+      <label class="field-label">Description</label>
+      {{ form.description }}
+      {% if form.description.errors %}<p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.description.errors.0 }}</p>{% endif %}
+    </div>
+    <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined">send</span>Submit Feedback</button>
+  </form>
 </div>
 {% endblock %}

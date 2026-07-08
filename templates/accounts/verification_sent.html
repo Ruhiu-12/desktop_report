@@ -1,48 +1,37 @@
-{% extends "base_simple.html" %}
-
-{% block title %}Verification Email Sent | TechDesk Reporter{% endblock %}
-
-{% block content %}
-<div class="bg-white rounded-2xl shadow-xl p-8">
-    <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-green-50 rounded-xl mb-4">
-            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-        </div>
-        <h1 class="text-2xl font-bold text-gray-900">Check Your Email</h1>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Check Your Email | TechDesk Reporter</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="{% static 'css/design-system-v2.css' %}" rel="stylesheet"/>
+<style>.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}</style>
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card" style="text-align:center">
+    <div style="width:56px;height:56px;border-radius:14px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+      <span class="material-symbols-outlined" style="color:var(--success);font-size:28px">mail</span>
     </div>
-
-    <div class="bg-gray-50 rounded-lg p-4 mb-6">
-        {% if email %}
-            <p class="text-sm text-gray-600">We've sent a verification link to</p>
-            <p class="text-sm font-semibold text-gray-900 mt-1">{{ email }}</p>
-        {% else %}
-            <p class="text-sm text-gray-600">We've sent a verification link to your registered email address.</p>
-        {% endif %}
+    <h2 style="margin:0 0 8px;font-size:21px">Check Your Email</h2>
+    {% if email %}
+    <p style="margin:0 0 20px;font-size:13px;color:var(--ink-faint)">We've sent a verification link to<br/><strong style="color:var(--text)">{{ email }}</strong></p>
+    {% else %}
+    <p style="margin:0 0 20px;font-size:13px;color:var(--ink-faint)">We've sent a verification link to your registered email address.</p>
+    {% endif %}
+    <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:20px;font-size:12.5px;color:var(--text-secondary)">
+      <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">info</span>
+      Click the link in the email to verify your account. Check your spam folder if you don't see it.
     </div>
-
-    <p class="text-sm text-gray-500 text-center mb-6">
-        Click the link in the email to verify your account. If you don't see it, check your spam folder.
-    </p>
-
-    <div class="space-y-3">
-        {% if email %}
-            <a href="{% url 'resend_verification' %}?email={{ email|urlencode }}"
-               class="block w-full py-2.5 text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg text-sm transition">
-                Resend Verification Email
-            </a>
-        {% else %}
-            <a href="{% url 'resend_verification' %}"
-               class="block w-full py-2.5 text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg text-sm transition">
-                Resend Verification Email
-            </a>
-        {% endif %}
-
-        <a href="{% url 'login' %}"
-           class="block w-full py-2.5 text-center border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium rounded-lg text-sm transition">
-            Back to Login
-        </a>
-    </div>
+    {% if email %}
+    <a href="{% url 'resend_verification' %}?email={{ email|urlencode }}" class="btn btn-primary btn-block" style="margin-bottom:10px"><span class="material-symbols-outlined">refresh</span>Resend Verification Email</a>
+    {% else %}
+    <a href="{% url 'resend_verification' %}" class="btn btn-primary btn-block" style="margin-bottom:10px"><span class="material-symbols-outlined">refresh</span>Resend Verification Email</a>
+    {% endif %}
+    <a href="{% url 'login' %}" class="btn btn-secondary btn-block"><span class="material-symbols-outlined">arrow_back</span>Back to Login</a>
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>

@@ -1,189 +1,134 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
+{% block title %}Case Detail | TechDesk Reporter{% endblock %}
+{% block nav_my_cases %}active{% endblock %}
+{% block nav_cases %}active{% endblock %}
 
-{% block title %}{{ case.title }} | TechDesk Reporter{% endblock %}
+{% block page_head %}
+<div class="page-head">
+  <p class="page-eyebrow">Case #{{ case.id }}</p>
+  <h1 style="margin:0;font-size:26px;font-weight:800">{{ case.title }}</h1>
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto">
-    <div class="mb-4">
-        <a href="{% url 'case_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Cases</a>
+<a href="{% url 'case_list' %}" style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:14px"><span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>Back to Cases</a>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+  <div>
+    <h2 style="margin:0 0 6px;font-size:19px">{{ case.title }}</h2>
+    <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-faint)">
+      <span class="asset-tag"><span class="asset-dot {% if case.status == 'CLOSED' %}ok{% elif case.status == 'IN_PROGRESS' %}busy{% elif case.status == 'WAITING_REPORT' %}busy{% elif case.status == 'ASSIGNED' %}warn{% else %}down{% endif %}"></span>{{ case.asset_tag|default:"—" }}</span>
+      <span>Reported by {% if case.created_by %}{{ case.created_by.get_full_name|default:case.created_by.identifier }}{% else %}Anonymous{% endif %} on {{ case.created_at|date:"M d" }}</span>
     </div>
-
-    <div class="flex items-start justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">{{ case.title }}</h1>
-            <p class="text-sm text-gray-500 mt-1">Created {{ case.created_at|date:"M d, Y H:i" }} by {{ case.created_by.identifier }}</p>
-        </div>
-        <div class="flex gap-2">
-            {% if user.is_superuser or user.groups.filter.name == 'admin' %}
-            <a href="{% url 'case_assign' case_id=case.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Assign
-            </a>
-            {% endif %}
-            {% if case.technician == user and not case.report %}
-            <a href="{% url 'report_create' case_id=case.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Submit Report
-            </a>
-            {% endif %}
-            {% if case.report %}
-            <a href="{% url 'report_detail' report_id=case.report.id %}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                View Report
-            </a>
-            {% endif %}
-        </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if case.status == "NEW" and is_admin %}
+    <a href="{% url 'case_assign' case.id %}" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">person_add</span>Assign</a>
+    {% endif %}
+    {% if case.status == "PENDING_REVIEW" and is_admin %}
+    <a href="{% url 'case_review' case.id %}" class="btn btn-success btn-sm"><span class="material-symbols-outlined">rate_review</span>Review Case</a>
+    {% endif %}
+    {% if is_admin %}
+    <form method="post" action="{% url 'case_delete' case.id %}" onsubmit="return confirm('Delete this case? This cannot be undone.')">
+      {% csrf_token %}
+      <button class="btn btn-ghost btn-sm" style="color:var(--danger)" type="submit"><span class="material-symbols-outlined">delete</span>Delete</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card card-pad">
+      <p class="card-title">Description</p>
+      <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0">{{ case.description }}</p>
     </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Info -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Details</h2>
-                <div class="prose prose-sm max-w-none text-gray-600">
-                    {{ case.description|linebreaks }}
-                </div>
-                {% if case.image %}
-                <div class="mt-4">
-                    <p class="text-sm font-medium text-gray-700 mb-2">Attached Screenshot:</p>
-                    <img src="{{ case.image.url }}" alt="Case screenshot" class="rounded-lg border border-gray-200 max-w-full">
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Audit Log -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Activity History</h2>
-                <div class="space-y-4">
-                    {% for log in audit_logs %}
-                    <div class="flex items-start gap-3 pb-4 {% if not forloop.last %}border-b border-gray-100{% endif %}">
-                        <div class="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                            <span class="text-xs font-medium text-gray-600">{{ log.changed_by.identifier|first }}</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm text-gray-800">{{ log.action }}</p>
-                            <p class="text-xs text-gray-400 mt-1">
-                                {{ log.changed_by.identifier }} &middot; {{ log.timestamp|date:"M d, Y H:i" }}
-                            </p>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <p class="text-sm text-gray-500">No activity recorded.</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Notes -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Notes</h2>
-                
-                <!-- Add Note Form -->
-                <form method="post" action="{% url 'case_add_note' case_id=case.id %}" class="mb-6">
-                    {% csrf_token %}
-                    <textarea name="content" rows="3" placeholder="Add a note about this case..." 
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"></textarea>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        Add Note
-                    </button>
-                </form>
-
-                <!-- Notes List -->
-                <div class="space-y-4">
-                    {% for note in notes %}
-                    <div class="pb-4 {% if not forloop.last %}border-b border-gray-100{% endif %}">
-                        <div class="flex items-center gap-2 mb-1">
-                            <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                                <span class="text-xs font-medium text-gray-600">{{ note.author.identifier|first }}</span>
-                            </div>
-                            <span class="text-sm font-medium text-gray-800">{{ note.author.identifier }}</span>
-                            <span class="text-xs text-gray-400">{{ note.created_at|date:"M d, Y H:i" }}</span>
-                        </div>
-                        <p class="text-sm text-gray-600 ml-8">{{ note.content }}</p>
-                    </div>
-                    {% empty %}
-                    <p class="text-sm text-gray-500">No notes yet.</p>
-                    {% endfor %}
-                </div>
-            </div>
+    <div class="card card-pad">
+      <p class="card-title">Activity History</p>
+      <div style="display:flex;flex-direction:column">
+        {% for log in audit_logs %}
+        <div class="timeline-item">
+          <div class="timeline-dot-wrap">
+            <div class="timeline-dot"><span class="material-symbols-outlined" style="font-size:14px">circle</span></div>
+            {% if not forloop.last %}<div class="timeline-line"></div>{% endif %}
+          </div>
+          <div style="padding-bottom:18px">
+            <p style="margin:0;font-size:13px;font-weight:700">{{ log.action }}</p>
+            <p style="margin:2px 0 0;font-size:12px;color:var(--ink-faint)">{% if log.changed_by %}{{ log.changed_by.get_full_name|default:log.changed_by.identifier }}{% else %}System{% endif %} · {{ log.timestamp|date:"M d, g:i A" }}</p>
+          </div>
         </div>
-
-        <!-- Sidebar Info -->
-        <div class="space-y-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Status</h2>
-                <div class="mb-4">
-                    {% if case.status == 'NEW' %}
-                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-blue-100 text-blue-800">New</span>
-                    {% elif case.status == 'ASSIGNED' %}
-                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">Assigned</span>
-                    {% elif case.status == 'IN_PROGRESS' %}
-                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-purple-100 text-purple-800">In Progress</span>
-                    {% elif case.status == 'PENDING_REVIEW' %}
-                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-orange-100 text-orange-800">Pending Review</span>
-                    {% elif case.status == 'CLOSED' %}
-                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-green-100 text-green-800">Closed</span>
-                    {% endif %}
-                </div>
-
-                <!-- Quick Status Update - Admin only -->
-                {% if user.is_superuser or user.groups.filter.name == 'admin' %}
-                <form method="post" action="{% url 'case_update_status' case_id=case.id %}" class="space-y-3">
-                    {% csrf_token %}
-                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="IN_PROGRESS" {% if case.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                        <option value="PENDING_REVIEW" {% if case.status == 'PENDING_REVIEW' %}selected{% endif %}>Pending Review</option>
-                        <option value="CLOSED" {% if case.status == 'CLOSED' %}selected{% endif %}>Closed</option>
-                    </select>
-                    <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        Update Status
-                    </button>
-                </form>
-                {% endif %}
-
-                <!-- Technician status update - limited options -->
-                {% if case.technician == user and not user.is_superuser and not user.groups.filter.name == 'admin' %}
-                <form method="post" action="{% url 'case_update_status' case_id=case.id %}" class="space-y-3">
-                    {% csrf_token %}
-                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="IN_PROGRESS" {% if case.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                        <option value="PENDING_REVIEW" {% if case.status == 'PENDING_REVIEW' %}selected{% endif %}>Pending Review (Submit Report)</option>
-                    </select>
-                    <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        Update Status
-                    </button>
-                </form>
-                {% endif %}
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Properties</h2>
-                <dl class="space-y-3">
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Priority</dt>
-                        <dd>
-                            {% if case.case_priority == 'CRITICAL' %}
-                            <span class="font-medium text-red-600">Critical</span>
-                            {% elif case.case_priority == 'HIGH' %}
-                            <span class="font-medium text-orange-600">High</span>
-                            {% elif case.case_priority == 'MEDIUM' %}
-                            <span class="font-medium text-yellow-600">Medium</span>
-                            {% elif case.case_priority == 'LOW' %}
-                            <span class="font-medium text-green-600">Low</span>
-                            {% endif %}
-                        </dd>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Technician</dt>
-                        <dd class="font-medium text-gray-800">{{ case.technician.identifier|default:"Unassigned" }}</dd>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Created</dt>
-                        <dd class="font-medium text-gray-800">{{ case.created_at|date:"M d, Y" }}</dd>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Updated</dt>
-                        <dd class="font-medium text-gray-800">{{ case.updated_at|date:"M d, Y" }}</dd>
-                    </div>
-                </dl>
-            </div>
-        </div>
+        {% empty %}
+        <p style="color:var(--ink-faint);font-size:13px">No activity recorded yet.</p>
+        {% endfor %}
+      </div>
     </div>
+    <div class="card card-pad">
+      <p class="card-title">Notes</p>
+      {% for note in notes %}
+      <div style="background:var(--paper);border-radius:10px;padding:10px 12px;margin-bottom:14px">
+        <p style="margin:0;font-size:13px">{{ note.content }}</p>
+        <p style="margin:4px 0 0;font-size:11.5px;color:var(--ink-faint)">{% if note.author %}{{ note.author.get_full_name|default:note.author.identifier }}{% else %}Unknown{% endif %} · {{ note.created_at|date:"M d, g:i A" }}</p>
+      </div>
+      {% empty %}
+      <p style="color:var(--ink-faint);font-size:13px;margin-bottom:14px">No notes yet.</p>
+      {% endfor %}
+      <form method="post" action="{% url 'case_add_note' case.id %}" style="display:flex;gap:8px">
+        {% csrf_token %}
+        <input class="input" name="content" placeholder="Add a note..." type="text" required/>
+        <button class="btn btn-primary btn-sm" type="submit">Post</button>
+      </form>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card card-pad">
+      <p class="card-title">Status</p>
+      <span class="badge badge-{% if case.status == 'NEW' %}new{% elif case.status == 'ASSIGNED' %}assigned{% elif case.status == 'IN_PROGRESS' %}progress{% elif case.status == 'WAITING_REPORT' %}review{% elif case.status == 'PENDING_REVIEW' %}review{% else %}closed{% endif %}">{{ case.get_status_display }}</span>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        {% if case.status == "NEW" and is_admin %}
+          <form method="post" action="{% url 'case_update_status' case.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="ASSIGNED"/>
+            <button class="btn btn-primary btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">person_add</span>Assign Technician</button>
+          </form>
+        {% elif case.status == "ASSIGNED" and case.technician == user %}
+          <form method="post" action="{% url 'case_update_status' case.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="IN_PROGRESS"/>
+            <button class="btn btn-primary btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">play_arrow</span>Start Case</button>
+          </form>
+        {% elif case.status == "IN_PROGRESS" and case.technician == user %}
+          <form method="post" action="{% url 'case_update_status' case.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="WAITING_REPORT"/>
+            <button class="btn btn-outline-danger btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">stop</span>Stop Case</button>
+          </form>
+        {% elif case.status == "WAITING_REPORT" and case.technician == user %}
+          <a href="{% url 'report_create' case.id %}" class="btn btn-success btn-sm" style="width:100%"><span class="material-symbols-outlined">edit_note</span>Submit Report</a>
+        {% elif case.status == "PENDING_REVIEW" and is_admin %}
+          <form method="post" action="{% url 'case_update_status' case.id %}" style="display:flex;gap:8px">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="CLOSED"/>
+            <button class="btn btn-success btn-sm" style="flex:1" type="submit"><span class="material-symbols-outlined">check</span>Approve</button>
+          </form>
+          <form method="post" action="{% url 'case_update_status' case.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="IN_PROGRESS"/>
+            <button class="btn btn-outline-danger btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">replay</span>Send Back</button>
+          </form>
+        {% elif case.status == "CLOSED" %}
+          <p style="font-size:12.5px;color:var(--success);text-align:center">Case resolved</p>
+        {% else %}
+          <p style="font-size:12.5px;color:var(--ink-faint);text-align:center">No actions available</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card card-pad">
+      <p class="card-title">Properties</p>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Priority</span><span class="chip-priority chip-{{ case.case_priority|lower }}">{{ case.get_case_priority_display }}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Technician</span><span style="font-weight:700">{% if case.technician %}{{ case.technician.get_full_name|default:case.technician.identifier }}{% else %}Unassigned{% endif %}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Created</span><span>{{ case.created_at|date:"M d, Y" }}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Updated</span><span>{{ case.updated_at|date:"M d, Y" }}</span></div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

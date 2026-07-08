@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'reports.apps.ReportsConfig',
     'users.apps.UsersConfig',
     'logs.apps.LogsConfig',
+    'labs',
 ]
 
 MIDDLEWARE = [

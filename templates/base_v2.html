@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>{% block title %}TechDesk Reporter{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="{% static 'css/design-system-v2.css' %}" rel="stylesheet"/>
+<style>.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% with user_role=user.groups.all.0.name|default:"Student" %}
+<nav class="topnav">
+  <div class="tn-brand">
+    <div class="tn-mark"><span class="material-symbols-outlined">bolt</span></div>
+    <span class="tn-name">TechDesk<span style="font-weight:500;color:rgba(255,255,255,.55)"> Reporter</span></span>
+  </div>
+  <div class="tn-links">
+    {% if user.is_authenticated %}
+      <a class="tn-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+      {% if user_role == "Admin" %}
+        <a class="tn-link {% block nav_cases %}{% endblock %}" href="{% url 'case_list' %}"><span class="material-symbols-outlined">list_alt</span>Cases</a>
+        <a class="tn-link {% block nav_reports %}{% endblock %}" href="{% url 'report_list' %}"><span class="material-symbols-outlined">description</span>Reports</a>
+        <a class="tn-link {% block nav_labs %}{% endblock %}" href="{% url 'lab_list' %}"><span class="material-symbols-outlined">computer</span>Labs</a>
+        <a class="tn-link {% block nav_users %}{% endblock %}" href="{% url 'user_list' %}"><span class="material-symbols-outlined">group</span>Users</a>
+      {% elif user_role == "Technician" %}
+        <a class="tn-link {% block nav_my_cases %}{% endblock %}" href="{% url 'case_list' %}"><span class="material-symbols-outlined">list_alt</span>My Cases</a>
+        <a class="tn-link {% block nav_reports_tech %}{% endblock %}" href="{% url 'report_list' %}"><span class="material-symbols-outlined">description</span>Reports</a>
+      {% else %}
+        <a class="tn-link {% block nav_report %}{% endblock %}" href="{% url 'case_create' %}"><span class="material-symbols-outlined">grid_view</span>Report</a>
+        <a class="tn-link {% block nav_my_cases_student %}{% endblock %}" href="{% url 'case_list' %}"><span class="material-symbols-outlined">list_alt</span>My Cases</a>
+      {% endif %}
+    {% else %}
+      <a class="tn-link" href="/"><span class="material-symbols-outlined">home</span>Home</a>
+      <a class="tn-link {% block nav_report_public %}{% endblock %}" href="{% url 'case_create' %}"><span class="material-symbols-outlined">grid_view</span>Report Issue</a>
+    {% endif %}
+  </div>
+  <div class="tn-right">
+    {% if user.is_authenticated %}
+      <span class="tn-role">{{ user_role }}</span>
+      <div class="tn-avatar">{{ user.first_name|first|default:"U" }}{{ user.last_name|first|default:"" }}</div>
+      <a href="{% url 'logout' %}" style="color:rgba(255,255,255,.7);text-decoration:none;font-size:12px;margin-left:4px">Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}" class="tn-link" style="background:rgba(255,255,255,.15);color:white;font-size:13px">Login</a>
+      <a href="{% url 'register' %}" class="tn-link" style="background:white;color:var(--brand);font-size:13px">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+{% endwith %}
+{% block page_head %}{% endblock %}
+{% if messages %}
+<div style="position:fixed;top:72px;right:24px;z-index:200;display:flex;flex-direction:column;gap:8px">
+  {% for message in messages %}
+  <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;font-size:13.5px;font-weight:500;color:white;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideIn .3s ease;min-width:280px;
+    {% if 'success' in message.tags %}background:#10B981;
+    {% elif 'error' in message.tags %}background:#EF4444;
+    {% elif 'warning' in message.tags %}background:#F59E0B;color:#1E293B;
+    {% else %}background:#3B82F6{% endif %}">
+    {% if 'success' in message.tags %}<span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
+    {% elif 'error' in message.tags %}<span class="material-symbols-outlined" style="font-size:20px">error</span>
+    {% elif 'warning' in message.tags %}<span class="material-symbols-outlined" style="font-size:20px">warning</span>
+    {% else %}<span class="material-symbols-outlined" style="font-size:20px">info</span>{% endif %}
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+<style>@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}</style>
+<script>setTimeout(function(){document.querySelectorAll('[style*="position:fixed;top:72px"] > div').forEach(function(el){el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(function(){el.remove()},300)})},4000)</script>
+{% endif %}
+<div class="content">
+{% block content %}{% endblock %}
+</div>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

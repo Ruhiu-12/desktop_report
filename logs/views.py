@@ -9,6 +9,7 @@ from datetime import timedelta
 import json
 
 from .models import ActivityLog, Feedback
+from .forms import FeedbackForm
 
 
 def _is_admin(user):
@@ -123,31 +124,22 @@ def log_download(request):
     return response
 
 
-@login_required
 def feedback_submit(request):
     if request.method == 'POST':
-        feedback_type = request.POST.get('type', '')
-        title = request.POST.get('title', '').strip()
-        description = request.POST.get('description', '').strip()
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            if request.user.is_authenticated:
+                feedback.submitted_by = request.user
+            feedback.save()
+            messages.success(request, "Your feedback has been submitted. Thank you!")
+            if request.user.is_authenticated:
+                return redirect('dashboard')
+            return redirect('login')
+    else:
+        form = FeedbackForm()
 
-        if not title or not description:
-            messages.error(request, "Title and description are required.")
-            return redirect('feedback_submit')
-
-        if feedback_type not in ['BUG', 'FEATURE']:
-            messages.error(request, "Invalid feedback type.")
-            return redirect('feedback_submit')
-
-        Feedback.objects.create(
-            type=feedback_type,
-            title=title,
-            description=description,
-            submitted_by=request.user,
-        )
-        messages.success(request, "Your feedback has been submitted. Thank you!")
-        return redirect('dashboard')
-
-    return render(request, 'logs/feedback_submit.html')
+    return render(request, 'logs/feedback_submit.html', {'form': form})
 
 
 @login_required

@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes, force_str
 from django.conf import settings
 from django.contrib.auth import authenticate, login as auth_login, logout, get_user_model
+from django.contrib.auth.models import Group
 
 
 from django.http import HttpResponse
@@ -308,8 +309,8 @@ def login_view(request):
         password = request.POST.get("password")
         
         try:
-            # Check if user exists by their identifier
-            user = User.objects.get(identifier=identifier)
+            # Check if user exists by their identifier (case-insensitive)
+            user = User.objects.get(identifier__iexact=identifier)
             
             # Security Gate: Ensure the user is verified before allowing access
             if not user.is_verified:
@@ -317,7 +318,7 @@ def login_view(request):
                 return redirect("verification_sent")
             
             # Authenticate the user[cite: 4]
-            user = authenticate(request, identifier=identifier, password=password)
+            user = authenticate(request, identifier=user.identifier, password=password)
             
             if user is not None:
                 auth_login(request, user)
@@ -357,6 +358,20 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     return redirect("dashboard:dashboard")
+
+@login_required
+def switch_role(request):
+    role = request.GET.get('role', '')
+    allowed = ['Student', 'Technician', 'Admin']
+    if role in allowed and not request.user.is_superuser:
+        request.user.groups.clear()
+        group, _ = Group.objects.get_or_create(name=role)
+        request.user.groups.add(group)
+    elif role in allowed and request.user.is_superuser:
+        request.user.groups.clear()
+        group, _ = Group.objects.get_or_create(name=role)
+        request.user.groups.add(group)
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 
 

@@ -13,12 +13,10 @@ def report_list(request):
     user = request.user
     queryset = Report.objects.select_related('case', 'technician')
 
-    if user.is_superuser or user.groups.filter(name='admin').exists():
+    if user.is_superuser or user.groups.filter(name='Admin').exists():
         pass
-    elif user.groups.filter(name='technician').exists():
+    elif user.groups.filter(name='Technician').exists():
         queryset = queryset.filter(technician=user)
-    elif user.groups.filter(name='analyst').exists():
-        pass
     else:
         queryset = queryset.none()
 
@@ -58,16 +56,14 @@ def report_detail(request, report_id):
 
     if not (
         user.is_superuser
-        or user.groups.filter(name='admin').exists()
+        or user.groups.filter(name='Admin').exists()
         or report.technician == user
-        or user.groups.filter(name='analyst').exists()
     ):
         return HttpResponseForbidden("You do not have permission to view this report.")
 
     can_review = (
         user.is_superuser
-        or user.groups.filter(name='admin').exists()
-        or user.groups.filter(name='analyst').exists()
+        or user.groups.filter(name='Admin').exists()
     )
 
     context = {
@@ -124,10 +120,9 @@ def report_review(request, report_id):
 
     if not (
         user.is_superuser
-        or user.groups.filter(name='admin').exists()
-        or user.groups.filter(name='analyst').exists()
+        or user.groups.filter(name='Admin').exists()
     ):
-        return HttpResponseForbidden("Only analysts can review reports.")
+        return HttpResponseForbidden("Only admins can review reports.")
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -136,6 +131,17 @@ def report_review(request, report_id):
             report.save()
             report.case.status = 'CLOSED'
             report.case.save()
+
+            # Update machine status to HEALTHY when case is closed
+            if report.case.asset_tag:
+                from labs.models import Machine
+                try:
+                    machine = Machine.objects.get(name=report.case.asset_tag)
+                    machine.status = 'HEALTHY'
+                    machine.save()
+                except Machine.DoesNotExist:
+                    pass
+
             CaseAuditLog.objects.create(
                 case=report.case,
                 action=f'Report approved by {user.identifier} - Case closed',
@@ -147,6 +153,17 @@ def report_review(request, report_id):
             report.save()
             report.case.status = 'IN_PROGRESS'
             report.case.save()
+
+            # Update machine status to IN_REPAIR when rejected
+            if report.case.asset_tag:
+                from labs.models import Machine
+                try:
+                    machine = Machine.objects.get(name=report.case.asset_tag)
+                    machine.status = 'IN_REPAIR'
+                    machine.save()
+                except Machine.DoesNotExist:
+                    pass
+
             CaseAuditLog.objects.create(
                 case=report.case,
                 action=f'Report rejected by {user.identifier} - Case reopened to IN_PROGRESS',

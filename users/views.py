@@ -10,7 +10,7 @@ from logs.models import ActivityLog
 
 User = get_user_model()
 
-ADMIN_GROUPS = ['admin']
+ADMIN_GROUPS = ['Admin']
 
 
 def _is_admin(user):
@@ -70,7 +70,7 @@ def user_detail(request, user_id):
     cases_assigned = target_user.assigned_cases.select_related('created_by').order_by('-created_at')[:10]
 
     user_groups = target_user.groups.values_list('name', flat=True)
-    all_groups = Group.objects.values_list('name', flat=True).order_by('name')
+    all_groups = Group.objects.exclude(name='Analyst').values_list('name', flat=True).order_by('name')
 
     context = {
         'target_user': target_user,
@@ -91,7 +91,7 @@ def user_update_role(request, user_id):
 
     if request.method == 'POST':
         role = request.POST.get('role', '')
-        all_roles = ['Admin', 'Technician', 'Analyst',  'User']
+        all_roles = ['Admin', 'Technician', 'Student']
 
         if role in all_roles:
             old_roles = list(target_user.groups.values_list('name', flat=True))

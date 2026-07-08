@@ -42,7 +42,7 @@
                 {% for case in recent_cases %}
                 <tr>
                     <td>{{ case.id }}</td>
-                    <td>{{ case.created_by.identifier }}</td>
+                    <td>{% if case.created_by %}{{ case.created_by.identifier }}{% else %}Anonymous{% endif %}</td>
                     <td><span class="badge">{{ case.case_status }}</span></td>
                     <td><a href="#" class="btn-small">Review</a></td>
                 </tr>

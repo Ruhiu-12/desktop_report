@@ -1,101 +1,62 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
+{% block title %}Report Detail | TechDesk Reporter{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block nav_reports_analyst %}active{% endblock %}
 
-{% block title %}Report for {{ report.case.title }} | TechDesk Reporter{% endblock %}
+{% block page_head %}
+<div class="page-head">
+  <p class="page-eyebrow">Report #{{ report.id }}</p>
+  <h1 style="margin:0;font-size:26px;font-weight:800">Report Review</h1>
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto">
-    <div class="mb-4">
-        <a href="{% url 'report_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Reports</a>
+<a href="{% url 'report_list' %}" style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:14px"><span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>Back to Reports</a>
+<div style="margin-bottom:18px">
+  <h2 style="margin:0 0 6px;font-size:19px">Report — {{ report.case.title }}</h2>
+  <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-faint)"><span style="font-weight:600;color:var(--text)">Case #{{ report.case.id }}</span><span>Submitted by {{ report.technician.get_full_name|default:report.technician.identifier }} on {{ report.date_submitted|date:"M d" }}</span></div>
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card card-pad"><p class="card-title">Findings</p><p style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0">{{ report.findings }}</p></div>
+    <div class="card card-pad"><p class="card-title">Solution Provided</p><p style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0">{{ report.solution_provided }}</p></div>
+    <div class="card card-pad"><p class="card-title">Evidence Photo</p>
+      <div style="border-radius:12px;background:var(--paper);border:1px solid var(--border);height:160px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint)">
+        {% if report.image %}
+        <img src="{{ report.image.url }}" alt="Evidence" style="max-width:100%;max-height:100%;border-radius:8px"/>
+        {% else %}
+        <span class="material-symbols-outlined" style="font-size:26px">image</span>
+        {% endif %}
+      </div>
     </div>
-
-    <div class="flex items-start justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Report for {{ report.case.title }}</h1>
-            <p class="text-sm text-gray-500 mt-1">Submitted by {{ report.technician.identifier }} on {{ report.date_submitted|date:"M d, Y H:i" }}</p>
-        </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card card-pad">
+      <p class="card-title">Approval Status</p>
+      <span class="badge {% if report.is_approved %}badge-closed{% else %}badge-review{% endif %}">{% if report.is_approved %}Approved{% else %}Pending{% endif %}</span>
+      {% if can_review %}
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <form method="post" action="{% url 'report_review' report.id %}" style="flex:1">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="approve"/>
+          <button class="btn btn-success btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">check</span>Approve</button>
+        </form>
+        <form method="post" action="{% url 'report_review' report.id %}" style="flex:1">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="reject"/>
+          <button class="btn btn-outline-danger btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">close</span>Reject</button>
+        </form>
+      </div>
+      {% endif %}
     </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Findings</h2>
-                <div class="prose prose-sm max-w-none text-gray-600">
-                    {{ report.findings|linebreaks }}
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Solution Provided</h2>
-                <div class="prose prose-sm max-w-none text-gray-600">
-                    {{ report.solution_provided|linebreaks }}
-                </div>
-            </div>
-
-            {% if report.image %}
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Evidence Photo</h2>
-                <img src="{{ report.image.url }}" alt="Evidence" class="rounded-lg border border-gray-200 max-w-full">
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="space-y-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Approval Status</h2>
-                <div class="mb-4">
-                    {% if report.is_approved %}
-                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
-                    {% else %}
-                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Review</span>
-                    {% endif %}
-                </div>
-
-                {% if can_review and not report.is_approved %}
-                <div class="space-y-3">
-                    <form method="post" action="{% url 'report_review' report_id=report.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="approve">
-                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                            Approve Report
-                        </button>
-                    </form>
-                    <form method="post" action="{% url 'report_review' report_id=report.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="reject">
-                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                            Reject Report
-                        </button>
-                    </form>
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Case Reference</h2>
-                <dl class="space-y-3">
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Case</dt>
-                        <dd class="font-medium text-gray-800">
-                            <a href="{% url 'case_detail' case_id=report.case.id %}" class="text-blue-600 hover:text-blue-800">
-                                {{ report.case.title }}
-                            </a>
-                        </dd>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Status</dt>
-                        <dd class="font-medium text-gray-800">{{ report.case.get_status_display }}</dd>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Technician</dt>
-                        <dd class="font-medium text-gray-800">{{ report.technician.identifier }}</dd>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <dt class="text-gray-500">Created By</dt>
-                        <dd class="font-medium text-gray-800">{{ report.case.created_by.identifier }}</dd>
-                    </div>
-                </dl>
-            </div>
-        </div>
+    <div class="card card-pad">
+      <p class="card-title">Case Reference</p>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Case</span><a href="{% url 'case_detail' report.case.id %}" style="color:var(--brand-dark);font-weight:700">#{{ report.case.id }}</a></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Status</span><span class="badge badge-{% if report.case.status == 'CLOSED' %}closed{% elif report.case.status == 'IN_PROGRESS' %}progress{% else %}assigned{% endif %}">{{ report.case.get_status_display }}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Priority</span><span class="chip-priority chip-{{ report.case.case_priority|lower }}">{{ report.case.get_case_priority_display }}</span></div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

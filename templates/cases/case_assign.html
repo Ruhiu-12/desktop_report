@@ -1,37 +1,29 @@
-{% extends "base.html" %}
-
+{% extends "base_v2.html" %}
 {% block title %}Assign Case | TechDesk Reporter{% endblock %}
+{% block nav_cases %}active{% endblock %}
+
+{% block page_head %}
+<div class="page-head">
+  <p class="page-eyebrow">Case #{{ case.id }}</p>
+  <h1 style="margin:0;font-size:26px;font-weight:800">Assign Technician</h1>
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <div class="mb-4">
-        <a href="{% url 'case_detail' case_id=case.id %}" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Case</a>
+<a href="{% url 'case_detail' case.id %}" style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:14px"><span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>Back to Case</a>
+<p style="font-size:14px;color:var(--text-secondary);margin-bottom:18px">Assigning: <strong style="color:var(--text)">{{ case.title }}</strong></p>
+<div class="card card-pad" style="max-width:480px">
+  <form method="post" style="display:flex;flex-direction:column;gap:16px">
+    {% csrf_token %}
+    <div>
+      <label class="field-label">Select Technician</label>
+      {{ form.technician }}
+      {% if form.technician.errors %}<p style="color:var(--danger);font-size:12px;margin-top:4px">{{ form.technician.errors.0 }}</p>{% endif %}
     </div>
-
-    <h1 class="text-2xl font-bold text-gray-800 mb-2">Assign Technician</h1>
-    <p class="text-sm text-gray-500 mb-6">Assigning: <span class="font-medium text-gray-700">{{ case.title }}</span></p>
-
-    <div class="bg-white rounded-lg shadow p-6">
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-
-            <div>
-                <label for="id_technician" class="block text-sm font-medium text-gray-700 mb-1">Select Technician</label>
-                {{ form.technician }}
-                {% if form.technician.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.technician.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div class="flex gap-3">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium">
-                    Assign Technician
-                </button>
-                <a href="{% url 'case_detail' case_id=case.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg text-sm font-medium">
-                    Cancel
-                </a>
-            </div>
-        </form>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined">person_add</span>Assign Technician</button>
+      <a href="{% url 'case_detail' case.id %}" class="btn btn-secondary">Cancel</a>
     </div>
+  </form>
 </div>
 {% endblock %}

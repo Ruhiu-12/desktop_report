@@ -1,11 +1,14 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.conf import settings
 from django.conf.urls.static import static
 
+def home(request):
+    return render(request, 'home.html')
+
 urlpatterns = [
-    path('', lambda request: redirect('login')),
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('dashboard/', include('dashboard.urls')),
     path('accounts/', include('accounts.urls')),
@@ -13,6 +16,7 @@ urlpatterns = [
     path('reports/', include('reports.urls')),
     path('users/', include('users.urls')),
     path('logs/', include('logs.urls')),
+    path('labs/', include('labs.urls')),
 ]
 
 if settings.DEBUG:

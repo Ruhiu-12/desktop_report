@@ -1,79 +1,53 @@
-{% extends "base.html" %}
-
+{% extends "base_v2.html" %}
 {% block title %}Feedback Detail | TechDesk Reporter{% endblock %}
 
+{% block page_head %}
+<div class="page-head">
+  <p class="page-eyebrow">Feedback #{{ feedback.id }}</p>
+  <h1 style="margin:0;font-size:26px;font-weight:800">{{ feedback.title }}</h1>
+</div>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <a href="{% url 'feedback_list' %}" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        Back to Feedback
-    </a>
-
-    <!-- Feedback Details -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <div class="flex items-start justify-between mb-4">
-            <div>
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                        {% if feedback.type == 'BUG' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
-                        {{ feedback.get_type_display }}
-                    </span>
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                        {% if feedback.status == 'OPEN' %}bg-yellow-100 text-yellow-800
-                        {% elif feedback.status == 'IN_REVIEW' %}bg-blue-100 text-blue-800
-                        {% else %}bg-green-100 text-green-800{% endif %}">
-                        {{ feedback.get_status_display }}
-                    </span>
-                </div>
-                <h1 class="text-xl font-bold text-gray-900">{{ feedback.title }}</h1>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-            <div>
-                <p class="text-gray-500">Submitted by</p>
-                <p class="font-medium text-gray-900">{{ feedback.submitted_by.identifier }}</p>
-            </div>
-            <div>
-                <p class="text-gray-500">Date</p>
-                <p class="font-medium text-gray-900">{{ feedback.created_at|date:"M d, Y H:i" }}</p>
-            </div>
-        </div>
-
-        <div class="border-t border-gray-200 pt-4">
-            <p class="text-sm font-medium text-gray-700 mb-2">Description</p>
-            <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ feedback.description }}</p>
-        </div>
+<a href="{% url 'feedback_list' %}" style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:14px"><span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>Back to Feedback</a>
+<div style="display:flex;gap:8px;margin-bottom:18px">
+  <span class="badge {% if feedback.type == 'BUG' %}badge-new{% else %}badge-assigned{% endif %}">{{ feedback.get_type_display }}</span>
+  <span class="badge {% if feedback.status == 'OPEN' %}badge-review{% elif feedback.status == 'IN_REVIEW' %}badge-assigned{% else %}badge-closed{% endif %}">{{ feedback.get_status_display }}</span>
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card card-pad">
+      <p class="card-title">Description</p>
+      <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0;white-space:pre-wrap">{{ feedback.description }}</p>
     </div>
-
-    <!-- Admin Response Form -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Admin Response</h2>
-        <form method="post" action="{% url 'feedback_detail' feedback_id=feedback.id %}">
-            {% csrf_token %}
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                    <option value="OPEN" {% if feedback.status == 'OPEN' %}selected{% endif %}>Open</option>
-                    <option value="IN_REVIEW" {% if feedback.status == 'IN_REVIEW' %}selected{% endif %}>In Review</option>
-                    <option value="RESOLVED" {% if feedback.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
-                </select>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Response</label>
-                <textarea name="admin_response" rows="4"
-                    placeholder="Add a response or notes..."
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">{{ feedback.admin_response }}</textarea>
-            </div>
-
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Update Feedback
-            </button>
-        </form>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card card-pad">
+      <p class="card-title">Details</p>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Submitted by</span><span style="font-weight:700">{{ feedback.submitted_by.identifier }}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-faint)">Date</span><span>{{ feedback.created_at|date:"M d, Y" }}</span></div>
+      </div>
     </div>
+    <div class="card card-pad">
+      <p class="card-title">Admin Response</p>
+      <form method="post" action="{% url 'feedback_detail' feedback_id=feedback.id %}" style="display:flex;flex-direction:column;gap:12px">
+        {% csrf_token %}
+        <div>
+          <label class="field-label">Status</label>
+          <select class="input" name="status">
+            <option value="OPEN" {% if feedback.status == 'OPEN' %}selected{% endif %}>Open</option>
+            <option value="IN_REVIEW" {% if feedback.status == 'IN_REVIEW' %}selected{% endif %}>In Review</option>
+            <option value="RESOLVED" {% if feedback.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Response</label>
+          <textarea class="input" name="admin_response" placeholder="Add a response or notes..." style="min-height:80px">{{ feedback.admin_response }}</textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit"><span class="material-symbols-outlined">check</span>Update Feedback</button>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}

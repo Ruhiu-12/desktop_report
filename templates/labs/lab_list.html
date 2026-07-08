@@ -1,0 +1,182 @@
+{% extends "base_v2.html" %}
+{% block title %}Lab & Issue Management | TechDesk Reporter{% endblock %}
+{% block nav_labs %}active{% endblock %}
+
+{% block page_head %}
+<div class="page-head">
+  <p class="page-eyebrow">CL3 Fault Desk</p>
+  <h1 style="margin:0;font-size:26px;font-weight:800">Lab & Issue Management</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:16px;margin-bottom:24px">
+  <a href="#labs" class="btn btn-primary btn-sm">Labs</a>
+  <a href="#issues" class="btn btn-secondary btn-sm">Issue Templates</a>
+</div>
+
+<div id="labs">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <p class="card-title" style="margin:0">Computer Labs</p>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('add-lab-modal').style.display='flex'"><span class="material-symbols-outlined">add</span>Add Lab</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
+    {% for lab in labs %}
+    <div class="card card-pad">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(79,70,229,.1);display:flex;align-items:center;justify-content:center">
+            <span class="material-symbols-outlined" style="color:var(--brand);font-size:20px">computer</span>
+          </div>
+          <div>
+            <p style="margin:0;font-weight:700;font-size:15px">{{ lab.name }}</p>
+            <p style="margin:2px 0 0;font-size:12px;color:var(--text-secondary)">{{ lab.machines.count }} machines · {{ lab.location|default:"—" }}</p>
+          </div>
+        </div>
+        <form method="post" action="{% url 'lab_delete' lab.id %}" onsubmit="return confirm('Delete {{ lab.name }}?')">
+          {% csrf_token %}
+          <button class="btn btn-ghost btn-sm" style="color:var(--danger)" type="submit"><span class="material-symbols-outlined">delete</span></button>
+        </form>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">
+        {% for machine in lab.machines.all %}
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all .2s" onclick="openMachineModal('{{ machine.name }}', '{{ machine.status }}', {{ machine.id }})" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span class="material-symbols-outlined" style="font-size:16px;color:{% if machine.status == 'HEALTHY' %}var(--success){% elif machine.status == 'FLAGGED' %}var(--warning){% elif machine.status == 'DOWN' %}var(--danger){% else %}var(--st-progress){% endif %}">{% if machine.status == 'HEALTHY' %}check_circle{% elif machine.status == 'FLAGGED' %}warning{% elif machine.status == 'DOWN' %}error{% else %}build{% endif %}</span>
+          <p style="margin:2px 0 0;font-size:10px;font-weight:600">{{ machine.name }}</p>
+          <p style="margin:0;font-size:9px;color:var(--text-secondary)">{{ machine.get_status_display }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="card card-pad" style="text-align:center;padding:40px">
+      <p style="font-weight:700;margin:0 0 4px">No labs yet</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin:0">Add your first computer lab to get started.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div id="issues">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <p class="card-title" style="margin:0">Issue Templates</p>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('add-issue-modal').style.display='flex'"><span class="material-symbols-outlined">add</span>Add Issue</button>
+  </div>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Predefined issues with auto-assigned priorities. These appear in the report form dropdown.</p>
+  <div class="card card-pad">
+    <table class="dtable">
+      <thead><tr><th>Issue Title</th><th>Default Priority</th><th></th></tr></thead>
+      <tbody>
+        {% for issue in issues %}
+        <tr>
+          <td style="font-weight:600">{{ issue.title }}</td>
+          <td>
+            <form method="post" action="{% url 'issue_update_priority' issue.id %}" style="display:flex;align-items:center;gap:6px">
+              {% csrf_token %}
+              <select class="input" name="default_priority" onchange="this.form.submit()" style="width:120px;padding:4px 8px;font-size:12px">
+                <option value="LOW" {% if issue.default_priority == "LOW" %}selected{% endif %}>Low</option>
+                <option value="MEDIUM" {% if issue.default_priority == "MEDIUM" %}selected{% endif %}>Medium</option>
+                <option value="HIGH" {% if issue.default_priority == "HIGH" %}selected{% endif %}>High</option>
+                <option value="CRITICAL" {% if issue.default_priority == "CRITICAL" %}selected{% endif %}>Critical</option>
+              </select>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="{% url 'issue_delete' issue.id %}" onsubmit="return confirm('Delete this issue?')">
+              {% csrf_token %}
+              <button class="btn btn-ghost btn-sm" style="color:var(--danger)" type="submit"><span class="material-symbols-outlined">delete</span></button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="text-align:center;color:var(--ink-faint);padding:24px">No issue templates yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="add-lab-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
+  <div class="card card-pad" style="width:100%;max-width:440px;margin:20px">
+    <p class="card-title" style="margin-bottom:16px">Add New Lab</p>
+    <form method="post" action="{% url 'lab_create' %}" style="display:flex;flex-direction:column;gap:14px">
+      {% csrf_token %}
+      <div><label class="field-label">Lab Name</label><input class="input" name="name" placeholder="e.g. CL5" required/></div>
+      <div><label class="field-label">Location</label><input class="input" name="location" placeholder="e.g. CL3 Building, Room 204"/></div>
+      <div><label class="field-label">Number of Machines</label><input class="input" name="machine_count" type="number" min="1" max="100" value="20" required/></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined">add</span>Create Lab</button>
+        <button class="btn btn-secondary" type="button" onclick="document.getElementById('add-lab-modal').style.display='none'">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="add-issue-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
+  <div class="card card-pad" style="width:100%;max-width:440px;margin:20px">
+    <p class="card-title" style="margin-bottom:16px">Add Issue Template</p>
+    <form method="post" action="{% url 'issue_create' %}" style="display:flex;flex-direction:column;gap:14px">
+      {% csrf_token %}
+      <div><label class="field-label">Issue Title</label><input class="input" name="title" placeholder="e.g. Won't power on" required/></div>
+      <div><label class="field-label">Default Priority</label>
+        <select class="input" name="default_priority">
+          <option value="LOW">Low</option>
+          <option value="MEDIUM" selected>Medium</option>
+          <option value="HIGH">High</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined">add</span>Add Issue</button>
+        <button class="btn btn-secondary" type="button" onclick="document.getElementById('add-issue-modal').style.display='none'">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="machine-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center">
+  <div class="card card-pad" style="width:100%;max-width:400px;margin:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <p class="card-title" style="margin:0" id="machine-modal-title">Machine</p>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('machine-modal').style.display='none'"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div id="machine-modal-content"></div>
+  </div>
+</div>
+
+<script>
+function openMachineModal(name, status, id){
+  var modal = document.getElementById('machine-modal');
+  var title = document.getElementById('machine-modal-title');
+  var content = document.getElementById('machine-modal-content');
+  
+  title.textContent = name;
+  
+  var statusColors = {healthy:'var(--success)', flagged:'var(--warning)', down:'var(--danger)', inrepair:'var(--st-progress)'};
+  var statusIcons = {healthy:'check_circle', flagged:'warning', down:'error', inrepair:'build'};
+  var statusLabels = {healthy:'Healthy', flagged:'Flagged', down:'Down', inrepair:'In Repair'};
+  var st = status.toLowerCase().replace('_', '');
+  
+  content.innerHTML = '<div style="text-align:center;margin-bottom:16px">' +
+    '<span class="material-symbols-outlined" style="font-size:40px;color:' + (statusColors[st]||'var(--text-secondary)') + '">' + (statusIcons[st]||'computer') + '</span>' +
+    '<p style="margin:4px 0 0;font-size:13px;color:var(--text-secondary)">Current status: <strong style="color:var(--text)">' + (statusLabels[st]||status) + '</strong></p></div>' +
+    '<form method="post" action="/labs/machine/' + id + '/update/" style="display:flex;flex-direction:column;gap:12px">' +
+    '{% csrf_token %}' +
+    '<div><label class="field-label">Update Status</label>' +
+    '<select class="input" name="status">' +
+    '<option value="HEALTHY"' + (st==='healthy'?' selected':'') + '>Healthy</option>' +
+    '<option value="FLAGGED"' + (st==='flagged'?' selected':'') + '>Flagged</option>' +
+    '<option value="IN_REPAIR"' + (st==='inrepair'?' selected':'') + '>In Repair</option>' +
+    '<option value="DOWN"' + (st==='down'?' selected':'') + '>Down</option>' +
+    '</select></div>' +
+    '<button class="btn btn-primary btn-sm" type="submit" style="width:100%"><span class="material-symbols-outlined">save</span>Update Status</button>' +
+    '</form>';
+  
+  modal.style.display = 'flex';
+}
+
+document.addEventListener('click', function(e){
+  if(e.target.id === 'machine-modal') document.getElementById('machine-modal').style.display = 'none';
+});
+</script>
+{% endblock %}
