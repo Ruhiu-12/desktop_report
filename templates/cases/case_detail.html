@@ -45,13 +45,16 @@
       <p class="card-title">Activity History</p>
       <div style="display:flex;flex-direction:column">
         {% for log in audit_logs %}
-        <div class="timeline-item">
+        <div class="timeline-item {% if log.related_note %}has-note{% endif %}" data-note-content="{{ log.related_note.content|escapejs }}" data-note-author="{{ log.changed_by.get_full_name|default:log.changed_by.identifier|escapejs }}" data-note-time="{{ log.timestamp|date:'M d, g:i A' }}" {% if log.related_note %}onclick="showNoteModal(this)"{% endif %}>
           <div class="timeline-dot-wrap">
             <div class="timeline-dot"><span class="material-symbols-outlined" style="font-size:14px">circle</span></div>
             {% if not forloop.last %}<div class="timeline-line"></div>{% endif %}
           </div>
           <div style="padding-bottom:18px">
-            <p style="margin:0;font-size:13px;font-weight:700">{{ log.action }}</p>
+            <p style="margin:0;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">
+              {{ log.action }}
+              {% if log.related_note %}<span class="material-symbols-outlined" style="font-size:14px;color:var(--brand)">open_in_new</span>{% endif %}
+            </p>
             <p style="margin:2px 0 0;font-size:12px;color:var(--ink-faint)">{% if log.changed_by %}{{ log.changed_by.get_full_name|default:log.changed_by.identifier }}{% else %}System{% endif %} · {{ log.timestamp|date:"M d, g:i A" }}</p>
           </div>
         </div>
@@ -60,35 +63,25 @@
         {% endfor %}
       </div>
     </div>
+    {% if notes %}
     <div class="card card-pad">
-      <p class="card-title">Notes</p>
+      <p class="card-title">Admin Notes</p>
       {% for note in notes %}
-      <div style="background:var(--paper);border-radius:10px;padding:10px 12px;margin-bottom:14px">
+      <div style="background:var(--paper);border-radius:10px;padding:10px 12px;margin-bottom:10px">
         <p style="margin:0;font-size:13px">{{ note.content }}</p>
         <p style="margin:4px 0 0;font-size:11.5px;color:var(--ink-faint)">{% if note.author %}{{ note.author.get_full_name|default:note.author.identifier }}{% else %}Unknown{% endif %} · {{ note.created_at|date:"M d, g:i A" }}</p>
       </div>
-      {% empty %}
-      <p style="color:var(--ink-faint);font-size:13px;margin-bottom:14px">No notes yet.</p>
       {% endfor %}
-      <form method="post" action="{% url 'case_add_note' case.id %}" style="display:flex;gap:8px">
-        {% csrf_token %}
-        <input class="input" name="content" placeholder="Add a note..." type="text" required/>
-        <button class="btn btn-primary btn-sm" type="submit">Post</button>
-      </form>
     </div>
+    {% endif %}
+
   </div>
   <div style="display:flex;flex-direction:column;gap:16px">
     <div class="card card-pad">
       <p class="card-title">Status</p>
       <span class="badge badge-{% if case.status == 'NEW' %}new{% elif case.status == 'ASSIGNED' %}assigned{% elif case.status == 'IN_PROGRESS' %}progress{% elif case.status == 'WAITING_REPORT' %}review{% elif case.status == 'PENDING_REVIEW' %}review{% else %}closed{% endif %}">{{ case.get_status_display }}</span>
       <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
-        {% if case.status == "NEW" and is_admin %}
-          <form method="post" action="{% url 'case_update_status' case.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="status" value="ASSIGNED"/>
-            <button class="btn btn-primary btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">person_add</span>Assign Technician</button>
-          </form>
-        {% elif case.status == "ASSIGNED" and case.technician == user %}
+        {% if case.status == "ASSIGNED" and case.technician == user %}
           <form method="post" action="{% url 'case_update_status' case.id %}">
             {% csrf_token %}
             <input type="hidden" name="status" value="IN_PROGRESS"/>
@@ -131,4 +124,26 @@
     </div>
   </div>
 </div>
+
+<div id="note-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div class="card card-pad" style="width:100%;max-width:480px;margin:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <p class="card-title" style="margin:0">Admin Note</p>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('note-modal').style.display='none'"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div id="note-modal-body" style="font-size:14px;color:var(--ink-soft);line-height:1.6;white-space:pre-wrap"></div>
+    <div id="note-modal-meta" style="margin-top:12px;font-size:12px;color:var(--ink-faint)"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showNoteModal(el){
+  document.getElementById('note-modal-body').textContent = el.dataset.noteContent;
+  document.getElementById('note-modal-meta').textContent = el.dataset.noteAuthor + ' · ' + el.dataset.noteTime;
+  document.getElementById('note-modal').style.display = 'flex';
+}
+document.querySelectorAll('.timeline-item.has-note').forEach(function(el){el.style.cursor='pointer'});
+</script>
 {% endblock %}

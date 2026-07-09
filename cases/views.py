@@ -203,7 +203,7 @@ def case_review_add_note(request, case_id):
             note_parts.append('Admin note: ' + admin_note)
 
         if note_parts:
-            CaseNote.objects.create(
+            note = CaseNote.objects.create(
                 case=case,
                 author=user,
                 content=' | '.join(note_parts),
@@ -212,6 +212,7 @@ def case_review_add_note(request, case_id):
                 case=case,
                 action='Admin review notes added',
                 changed_by=user,
+                related_note=note,
             )
             messages.success(request, 'Review notes saved.')
 

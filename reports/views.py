@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponseForbidden
-from cases.models import Case, Report, CaseAuditLog
+from cases.models import Case, Report, CaseAuditLog, ReportImage
 from .forms import ReportCreateForm
 
 
@@ -81,34 +81,63 @@ def report_create(request, case_id):
     if case.technician != user:
         return HttpResponseForbidden("Only the assigned technician can create a report for this case.")
 
-    if Report.objects.filter(case=case).exists():
-        messages.error(request, 'A report already exists for this case.')
-        return redirect('report_list')
+    existing_report = Report.objects.filter(case=case).first()
 
-    if request.method == 'POST':
-        form = ReportCreateForm(request.POST, request.FILES)
-        if form.is_valid():
-            report = form.save(commit=False)
-            report.case = case
-            report.technician = user
-            report.save()
+    if existing_report:
+        if request.method == 'POST':
+            form = ReportCreateForm(request.POST, request.FILES, instance=existing_report)
+            if form.is_valid():
+                report = form.save()
+                case.status = 'PENDING_REVIEW'
+                case.save()
 
-            case.status = 'PENDING_REVIEW'
-            case.save()
+                from .models import ReportImage
+                images = request.FILES.getlist('images')
+                if images:
+                    for img in images:
+                        ReportImage.objects.create(report=report, image=img)
 
-            CaseAuditLog.objects.create(
-                case=case,
-                action=f'Report submitted by {user.identifier}',
-                changed_by=user,
-            )
-            messages.success(request, 'Report submitted successfully.')
-            return redirect('report_detail', report_id=report.id)
+                CaseAuditLog.objects.create(
+                    case=case,
+                    action=f'Report updated by {user.identifier}',
+                    changed_by=user,
+                )
+                messages.success(request, 'Report updated successfully.')
+                return redirect('report_detail', report_id=report.id)
+        else:
+            form = ReportCreateForm(instance=existing_report)
     else:
-        form = ReportCreateForm()
+        if request.method == 'POST':
+            form = ReportCreateForm(request.POST, request.FILES)
+            if form.is_valid():
+                report = form.save(commit=False)
+                report.case = case
+                report.technician = user
+                report.save()
+
+                from .models import ReportImage
+                images = request.FILES.getlist('images')
+                if images:
+                    for img in images:
+                        ReportImage.objects.create(report=report, image=img)
+
+                case.status = 'PENDING_REVIEW'
+                case.save()
+
+                CaseAuditLog.objects.create(
+                    case=case,
+                    action=f'Report submitted by {user.identifier}',
+                    changed_by=user,
+                )
+                messages.success(request, 'Report submitted successfully.')
+                return redirect('report_detail', report_id=report.id)
+        else:
+            form = ReportCreateForm()
 
     context = {
         'form': form,
         'case': case,
+        'existing_report': existing_report,
     }
     return render(request, 'reports/report_create.html', context)
 

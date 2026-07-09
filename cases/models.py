@@ -90,6 +90,13 @@ class CaseAuditLog(models.Model):
         on_delete=models.SET_NULL, 
         null=True
     )
+    related_note = models.ForeignKey(
+        'CaseNote',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='audit_logs'
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -118,3 +125,16 @@ class CaseNote(models.Model):
 
     def __str__(self):
         return f"Note by {self.author} on {self.case.title}"
+
+
+class ReportImage(models.Model):
+    report = models.ForeignKey(
+        'Report',
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+    image = models.ImageField(upload_to='reports/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.report}"

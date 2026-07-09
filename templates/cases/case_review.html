@@ -36,9 +36,12 @@
     </div>
     {% if report.image %}
     <div class="card card-pad">
-      <p class="card-title">Evidence Photo</p>
-      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border)">
-        <img src="{{ report.image.url }}" alt="Evidence" style="width:100%;max-height:300px;object-fit:contain"/>
+      <p class="card-title">Evidence Photos</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;border-radius:12px;overflow:hidden;border:1px solid var(--border);padding:8px">
+        <img src="{{ report.image.url }}" alt="Evidence" style="max-height:200px;border-radius:8px"/>
+        {% for img in report.images.all %}
+        <img src="{{ img.image.url }}" alt="Evidence" style="max-height:200px;border-radius:8px"/>
+        {% endfor %}
       </div>
     </div>
     {% endif %}

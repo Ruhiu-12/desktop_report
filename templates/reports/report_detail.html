@@ -20,12 +20,16 @@
   <div style="display:flex;flex-direction:column;gap:16px">
     <div class="card card-pad"><p class="card-title">Findings</p><p style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0">{{ report.findings }}</p></div>
     <div class="card card-pad"><p class="card-title">Solution Provided</p><p style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0">{{ report.solution_provided }}</p></div>
-    <div class="card card-pad"><p class="card-title">Evidence Photo</p>
-      <div style="border-radius:12px;background:var(--paper);border:1px solid var(--border);height:160px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint)">
+    <div class="card card-pad"><p class="card-title">Evidence Photos</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;border-radius:12px;background:var(--paper);border:1px solid var(--border);padding:12px">
         {% if report.image %}
-        <img src="{{ report.image.url }}" alt="Evidence" style="max-width:100%;max-height:100%;border-radius:8px"/>
-        {% else %}
-        <span class="material-symbols-outlined" style="font-size:26px">image</span>
+        <img src="{{ report.image.url }}" alt="Evidence" style="max-height:160px;border-radius:8px;border:1px solid var(--border)"/>
+        {% endif %}
+        {% for img in report.images.all %}
+        <img src="{{ img.image.url }}" alt="Evidence" style="max-height:160px;border-radius:8px;border:1px solid var(--border)"/>
+        {% endfor %}
+        {% if not report.image and not report.images.all %}
+        <span class="material-symbols-outlined" style="font-size:26px;color:var(--ink-faint)">image</span>
         {% endif %}
       </div>
     </div>
@@ -47,6 +51,9 @@
           <button class="btn btn-outline-danger btn-sm" style="width:100%" type="submit"><span class="material-symbols-outlined">close</span>Reject</button>
         </form>
       </div>
+      {% endif %}
+      {% if report.technician == user and report.case.status == 'WAITING_REPORT' %}
+      <a href="{% url 'report_create' report.case.id %}" class="btn btn-secondary btn-sm" style="width:100%;margin-top:14px"><span class="material-symbols-outlined">edit</span>Edit Report</a>
       {% endif %}
     </div>
     <div class="card card-pad">

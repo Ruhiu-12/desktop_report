@@ -40,14 +40,6 @@
 {% endblock %}
 
 {% block content %}
-{% if messages %}
-{% for message in messages %}
-<div style="background:{% if 'success' in message.tags %}#ECFDF5;border:1px solid #D1FAE5{% else %}#FEF2F2;border:1px solid #FEE2E2{% endif %};border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13.5px;color:{% if 'success' in message.tags %}#065F46{% else %}#B91C1C{% endif %}">
-  {{ message }}
-</div>
-{% endfor %}
-{% endif %}
-
 <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start">
   <div class="floor-wrap" id="floor-wrap">
     <div id="view-pick-lab">
@@ -148,9 +140,9 @@ function loadLabsFromAPI(){
       data.labs.forEach(function(lab){
         var machines = [];
         lab.machines.forEach(function(m){
-          machines.push({name:m.name, status:m.status});
+          machines.push({name:m.name, status:m.status, row:m.row, col:m.col});
         });
-        labs[lab.name] = {machines:machines, location:lab.location};
+        labs[lab.name] = {machines:machines, location:lab.location, grid_columns:lab.grid_columns};
         html += '<div class="lab-card" onclick="selectLab(\''+lab.name+'\')" data-lab="'+lab.name+'">'+
           '<div class="lab-icon"><span class="material-symbols-outlined" style="font-size:24px">computer</span></div>'+
           '<div class="lab-name">'+lab.name+'</div>'+
