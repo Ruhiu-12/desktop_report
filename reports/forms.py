@@ -8,7 +8,7 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 class ReportCreateForm(forms.ModelForm):
     class Meta:
         model = Report
-        fields = ['findings', 'solution_provided', 'image']
+        fields = ['findings', 'solution_provided']
         widgets = {
             'findings': forms.Textarea(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -40,12 +40,3 @@ class ReportCreateForm(forms.ModelForm):
         if len(solution) < 10:
             raise forms.ValidationError("Solution must be at least 10 characters.")
         return solution
-
-    def clean_image(self):
-        image = self.cleaned_data.get('image')
-        if image:
-            if image.content_type not in ALLOWED_IMAGE_TYPES:
-                raise forms.ValidationError("Only JPEG, PNG, GIF, and WebP images are allowed.")
-            if image.size > MAX_IMAGE_SIZE:
-                raise forms.ValidationError("Image must be less than 5MB.")
-        return image

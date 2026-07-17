@@ -105,6 +105,20 @@
     </form>
   </div>
 </div>
+
+<div id="machine-status-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:400px;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
+    <div style="padding:24px;text-align:center">
+      <div style="width:56px;height:56px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <span class="material-symbols-outlined" style="font-size:28px;color:var(--danger)">block</span>
+      </div>
+      <p style="margin:0 0 4px;font-weight:700;font-size:16px" id="machine-status-name"></p>
+      <p style="margin:0 0 12px"><span class="badge badge-warn" id="machine-status-label"></span></p>
+      <p style="margin:0 0 20px;font-size:13.5px;color:var(--ink-soft);line-height:1.5" id="machine-status-reason"></p>
+      <button onclick="document.getElementById('machine-status-modal').style.display='none'" class="btn btn-primary btn-sm" style="width:100%">Got it</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -220,6 +234,26 @@ function renderGrid(name){
 }
 
 function pickMachine(pc){
+  var lab = labs[selectedLab];
+  var machine = null;
+  if(lab && lab.machines){
+    for(var i=0;i<lab.machines.length;i++){
+      if(lab.machines[i].name === pc){machine=lab.machines[i];break;}
+    }
+  }
+  if(machine && machine.status !== 'healthy'){
+    var reason = {
+      flagged: 'This machine has a reported issue and is waiting to be fixed. You cannot report it again.',
+      inrepair: 'This machine is currently being repaired by a technician. Please wait.',
+      down: 'This machine is down and not available for use.'
+    };
+    var statusLabel = {flagged:'Flagged',inrepair:'In Repair',down:'Down'};
+    document.getElementById('machine-status-name').textContent = pc;
+    document.getElementById('machine-status-label').textContent = statusLabel[machine.status] || machine.status;
+    document.getElementById('machine-status-reason').textContent = reason[machine.status] || 'This machine is not available.';
+    document.getElementById('machine-status-modal').style.display = 'flex';
+    return;
+  }
   document.querySelectorAll('.floor-tile').forEach(function(t){t.classList.remove('selected')});
   var tile = document.querySelector('[data-pc="'+pc+'"]');
   if(tile) tile.classList.add('selected');

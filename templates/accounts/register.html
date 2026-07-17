@@ -51,7 +51,6 @@
         <label class="field-label">I am a</label>
         <select class="input" id="user-type" onchange="updatePlaceholder()">
           <option value="student">Student</option>
-          <option value="staff">Staff / Technician</option>
           <option value="lecturer">Lecturer</option>
         </select>
       </div>
@@ -60,9 +59,9 @@
         <div><label class="field-label">Last Name</label><input class="input" name="last_name" placeholder="Kamau" type="text" value="{{ form.last_name.value|default:'' }}" required/></div>
       </div>
       <div style="margin-bottom:14px">
-        <label class="field-label">ID Number</label>
+        <label class="field-label">Admission / Employee Number</label>
         <input class="input" id="identifier-input" name="identifier" type="text" value="{{ form.identifier.value|default:'' }}" required/>
-        <p style="margin:4px 0 0;font-size:11.5px;color:var(--ink-faint)" id="id-hint">e.g. i231/g/8401/23</p>
+        <p style="margin:4px 0 0;font-size:11.5px;color:var(--ink-faint)" id="id-hint">Format: SC/XX/XXXX/XX</p>
       </div>
       <div style="margin-bottom:14px"><label class="field-label">Email</label><input class="input" name="email" placeholder="you@students.ac.ke" type="email" value="{{ form.email.value|default:'' }}" required/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
@@ -79,9 +78,8 @@
 </div>
 <script>
 var formats = {
-  student:  { placeholder: 'i231/g/8401/23', hint: 'e.g. i231/g/8401/23' },
-  staff:    { placeholder: 'EMP/00123', hint: 'e.g. EMP/00123' },
-  lecturer: { placeholder: 'LEC/0045', hint: 'e.g. LEC/0045' }
+  student:  { placeholder: 'e.g. SC211/0142/2023', hint: 'Format: SC/XX/XXXX/XX' },
+  lecturer: { placeholder: 'e.g. EMP/0045', hint: 'Format: EMP/XXXX' }
 };
 function updatePlaceholder(){
   var type = document.getElementById('user-type').value;

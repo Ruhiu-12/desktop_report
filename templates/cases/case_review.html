@@ -34,11 +34,13 @@
       <p class="card-title">Solution Provided</p>
       <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0">{{ report.solution_provided }}</p>
     </div>
-    {% if report.image %}
+    {% if report.images.all %}
     <div class="card card-pad">
       <p class="card-title">Evidence Photos</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;border-radius:12px;overflow:hidden;border:1px solid var(--border);padding:8px">
+        {% if report.image %}
         <img src="{{ report.image.url }}" alt="Evidence" style="max-height:200px;border-radius:8px"/>
+        {% endif %}
         {% for img in report.images.all %}
         <img src="{{ img.image.url }}" alt="Evidence" style="max-height:200px;border-radius:8px"/>
         {% endfor %}

@@ -21,8 +21,8 @@
     </div>
   </div>
   <div style="display:flex;gap:8px">
-    {% if case.status == "NEW" and is_admin %}
-    <a href="{% url 'case_assign' case.id %}" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">person_add</span>Assign</a>
+    {% if is_admin and case.status != "CLOSED" %}
+    <a href="{% url 'case_assign' case.id %}" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">person_add</span>{% if case.technician %}Reassign{% else %}Assign{% endif %}</a>
     {% endif %}
     {% if case.status == "PENDING_REVIEW" and is_admin %}
     <a href="{% url 'case_review' case.id %}" class="btn btn-success btn-sm"><span class="material-symbols-outlined">rate_review</span>Review Case</a>
@@ -45,7 +45,7 @@
       <p class="card-title">Activity History</p>
       <div style="display:flex;flex-direction:column">
         {% for log in audit_logs %}
-        <div class="timeline-item {% if log.related_note %}has-note{% endif %}" data-note-content="{{ log.related_note.content|escapejs }}" data-note-author="{{ log.changed_by.get_full_name|default:log.changed_by.identifier|escapejs }}" data-note-time="{{ log.timestamp|date:'M d, g:i A' }}" {% if log.related_note %}onclick="showNoteModal(this)"{% endif %}>
+        <div class="timeline-item {% if log.related_note and is_technician %}has-note{% endif %}" {% if log.related_note and is_technician %}data-note-content="{{ log.related_note.content|escapejs }}" data-note-author="{% if log.changed_by %}{{ log.changed_by.get_full_name|default:log.changed_by.identifier|escapejs }}{% else %}System{% endif %}" data-note-time="{{ log.timestamp|date:'M d, g:i A' }}" onclick="showNoteModal(this)"{% endif %}>
           <div class="timeline-dot-wrap">
             <div class="timeline-dot"><span class="material-symbols-outlined" style="font-size:14px">circle</span></div>
             {% if not forloop.last %}<div class="timeline-line"></div>{% endif %}
@@ -53,7 +53,7 @@
           <div style="padding-bottom:18px">
             <p style="margin:0;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px">
               {{ log.action }}
-              {% if log.related_note %}<span class="material-symbols-outlined" style="font-size:14px;color:var(--brand)">open_in_new</span>{% endif %}
+              {% if log.related_note and is_technician %}<span class="material-symbols-outlined" style="font-size:14px;color:var(--brand)">open_in_new</span>{% endif %}
             </p>
             <p style="margin:2px 0 0;font-size:12px;color:var(--ink-faint)">{% if log.changed_by %}{{ log.changed_by.get_full_name|default:log.changed_by.identifier }}{% else %}System{% endif %} · {{ log.timestamp|date:"M d, g:i A" }}</p>
           </div>
@@ -63,7 +63,7 @@
         {% endfor %}
       </div>
     </div>
-    {% if notes %}
+    {% if notes and is_technician %}
     <div class="card card-pad">
       <p class="card-title">Admin Notes</p>
       {% for note in notes %}
@@ -125,14 +125,22 @@
   </div>
 </div>
 
-<div id="note-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
-  <div class="card card-pad" style="width:100%;max-width:480px;margin:20px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <p class="card-title" style="margin:0">Admin Note</p>
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('note-modal').style.display='none'"><span class="material-symbols-outlined">close</span></button>
+<div id="note-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--surface);border-radius:16px;width:100%;max-width:500px;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="color:white;font-size:20px">admin_notes</span></div>
+        <p style="margin:0;font-weight:700;font-size:15px">Admin Note</p>
+      </div>
+      <button onclick="document.getElementById('note-modal').style.display='none'" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--ink-faint)"><span class="material-symbols-outlined" style="font-size:22px">close</span></button>
     </div>
-    <div id="note-modal-body" style="font-size:14px;color:var(--ink-soft);line-height:1.6;white-space:pre-wrap"></div>
-    <div id="note-modal-meta" style="margin-top:12px;font-size:12px;color:var(--ink-faint)"></div>
+    <div style="padding:16px 24px">
+      <div id="note-modal-body" style="font-size:14px;color:var(--ink-soft);line-height:1.7;white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border)"></div>
+    </div>
+    <div style="padding:0 24px 20px;display:flex;align-items:center;gap:8px">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700" id="note-modal-avatar"></div>
+      <div id="note-modal-meta" style="font-size:12.5px;color:var(--ink-faint)"></div>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -141,7 +149,11 @@
 <script>
 function showNoteModal(el){
   document.getElementById('note-modal-body').textContent = el.dataset.noteContent;
-  document.getElementById('note-modal-meta').textContent = el.dataset.noteAuthor + ' · ' + el.dataset.noteTime;
+  var author = el.dataset.noteAuthor;
+  document.getElementById('note-modal-meta').textContent = author + ' · ' + el.dataset.noteTime;
+  var parts = author.split(' ');
+  var initials = parts.length >= 2 ? parts[0][0] + parts[1][0] : author.substring(0,2);
+  document.getElementById('note-modal-avatar').textContent = initials.toUpperCase();
   document.getElementById('note-modal').style.display = 'flex';
 }
 document.querySelectorAll('.timeline-item.has-note').forEach(function(el){el.style.cursor='pointer'});

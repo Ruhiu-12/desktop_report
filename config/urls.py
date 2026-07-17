@@ -5,8 +5,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 def home(request):
-    if request.user.is_authenticated:
-        return redirect("dashboard")
     return render(request, 'home.html')
 
 urlpatterns = [

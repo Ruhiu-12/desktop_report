@@ -13,7 +13,7 @@ from .forms import FeedbackForm
 
 
 def _is_admin(user):
-    return user.is_superuser or user.groups.filter(name__in=['admin']).exists()
+    return user.is_superuser or user.groups.filter(name='Admin').exists()
 
 
 @login_required

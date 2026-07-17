@@ -26,6 +26,7 @@
         <a class="tn-link {% block nav_reports %}{% endblock %}" href="{% url 'report_list' %}"><span class="material-symbols-outlined">description</span>Reports</a>
         <a class="tn-link {% block nav_labs %}{% endblock %}" href="{% url 'lab_list' %}"><span class="material-symbols-outlined">computer</span>Labs</a>
         <a class="tn-link {% block nav_users %}{% endblock %}" href="{% url 'user_list' %}"><span class="material-symbols-outlined">group</span>Users</a>
+        <a class="tn-link {% block nav_logs %}{% endblock %}" href="{% url 'log_list' %}"><span class="material-symbols-outlined">receipt_long</span>Logs</a>
       {% elif user_role == "Technician" %}
         <a class="tn-link {% block nav_my_cases %}{% endblock %}" href="{% url 'case_list' %}"><span class="material-symbols-outlined">list_alt</span>My Cases</a>
         <a class="tn-link {% block nav_reports_tech %}{% endblock %}" href="{% url 'report_list' %}"><span class="material-symbols-outlined">description</span>Reports</a>

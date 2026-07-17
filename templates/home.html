@@ -1,15 +1,10 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>TechDesk Reporter - CL3 Fault Desk</title>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="{% static 'css/design-system-v2.css' %}" rel="stylesheet"/>
+{% extends "base_v2.html" %}
+{% block title %}TechDesk Reporter - CL3 Fault Desk{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block extra_css %}
 <style>
-.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}
-.hero{padding:80px 32px 60px;text-align:center;background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 100%);color:white}
+.hero{padding:80px 32px 60px;text-align:center;background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 100%);color:white;border-radius:0;margin:0 -32px 32px}
 .hero h1{font-size:42px;font-weight:800;margin:0 0 16px;line-height:1.15}
 .hero p{font-size:18px;opacity:.85;max-width:560px;margin:0 auto 32px;line-height:1.6}
 .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
@@ -18,7 +13,7 @@
 .btn-white:hover{background:rgba(255,255,255,.9)}
 .btn-outline-white{background:transparent;color:white;border:2px solid rgba(255,255,255,.4)}
 .btn-outline-white:hover{border-color:white;background:rgba(255,255,255,.1)}
-.section{padding:60px 32px;max-width:1100px;margin:0 auto}
+.section{padding:60px 0;max-width:1100px;margin:0 auto}
 .section-title{text-align:center;margin-bottom:40px}
 .section-title h2{font-size:28px;font-weight:800;margin:0 0 8px}
 .section-title p{color:var(--text-secondary);font-size:15px;margin:0}
@@ -32,35 +27,26 @@
 .step-num{width:48px;height:48px;border-radius:50%;background:var(--brand);color:white;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 16px}
 .step h3{font-size:16px;font-weight:700;margin:0 0 8px}
 .step p{font-size:13.5px;color:var(--text-secondary);margin:0;line-height:1.5}
-.cta{background:var(--bg);border-radius:16px;padding:48px 32px;text-align:center;margin:0 32px 60px}
+.cta{background:var(--bg);border-radius:16px;padding:48px 32px;text-align:center}
 .cta h2{font-size:24px;font-weight:800;margin:0 0 8px}
 .cta p{color:var(--text-secondary);margin:0 0 24px;font-size:15px}
-.footer{text-align:center;padding:24px;font-size:12.5px;color:var(--text-secondary);border-top:1px solid var(--border)}
 @media(max-width:768px){.hero h1{font-size:28px}.features,.steps{grid-template-columns:1fr}}
 </style>
-</head>
-<body>
-<nav class="topnav">
-  <div class="tn-brand">
-    <div class="tn-mark"><span class="material-symbols-outlined">bolt</span></div>
-    <span class="tn-name">TechDesk<span style="font-weight:500;color:rgba(255,255,255,.55)"> Reporter</span></span>
-  </div>
-  <div class="tn-links">
-    <a class="tn-link active" href="/"><span class="material-symbols-outlined">home</span>Home</a>
-    <a class="tn-link" href="{% url 'case_create_public' %}"><span class="material-symbols-outlined">report</span>Report Issue</a>
-  </div>
-  <div class="tn-right">
-    <a class="tn-link" href="{% url 'login' %}" style="background:rgba(255,255,255,.15);color:white">Login</a>
-    <a class="tn-link" href="{% url 'register' %}" style="background:white;color:var(--brand)">Sign Up</a>
-  </div>
-</nav>
+{% endblock %}
 
+{% block page_head %}{% endblock %}
+
+{% block content %}
 <div class="hero">
   <h1>Computer Lab<br/>Fault Reporting Made Simple</h1>
   <p>Spot a broken machine? Report it in seconds. No login needed. We track, assign, and resolve — so your lab stays up and running.</p>
   <div class="hero-btns">
     <a href="{% url 'case_create_public' %}" class="btn btn-white"><span class="material-symbols-outlined">report</span>Report an Issue</a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-white"><span class="material-symbols-outlined">dashboard</span>Go to Dashboard</a>
+    {% else %}
     <a href="{% url 'login' %}" class="btn btn-outline-white"><span class="material-symbols-outlined">login</span>Login to Dashboard</a>
+    {% endif %}
   </div>
 </div>
 
@@ -83,12 +69,12 @@
     <div class="feature-card">
       <div class="feature-icon" style="background:rgba(245,158,11,.1);color:var(--warning)"><span class="material-symbols-outlined" style="font-size:28px">group_work</span></div>
       <h3>Role-Based Workflow</h3>
-      <p>Students report, technicians fix, analysts verify. Everyone has a clear role in the resolution chain.</p>
+      <p>Students report, technicians fix, admins verify. Everyone has a clear role in the resolution chain.</p>
     </div>
   </div>
 </div>
 
-<div class="section" style="background:var(--bg);max-width:none;padding:60px 32px">
+<div class="section" style="max-width:none;background:var(--bg)">
   <div style="max-width:1100px;margin:0 auto">
     <div class="section-title">
       <h2>How It Works</h2>
@@ -121,9 +107,4 @@
     <a href="{% url 'case_create_public' %}" class="btn btn-primary" style="padding:14px 28px;font-size:15px"><span class="material-symbols-outlined">report</span>Report an Issue</a>
   </div>
 </div>
-
-<div class="footer">
-  TechDesk Reporter — CL3 Fault Desk &copy; 2026
-</div>
-</body>
-</html>
+{% endblock %}

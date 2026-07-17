@@ -35,16 +35,20 @@ def register(request):
     if request.method == "POST":
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            # Create user but don't save to DB yet
             user = form.save(commit=False)
             user.is_active = False
-            user.is_verified = False  # Ensure user cannot log in until verified
+            user.is_verified = False
             user.set_password(form.cleaned_data["password"])
             user.save()
-            
-            # Trigger the email verification process
+
+            from django.contrib.auth.models import Group
+            user_type = request.POST.get('user_type', 'student')
+            group_name = 'Student' if user_type == 'student' else 'Technician'
+            group, _ = Group.objects.get_or_create(name=group_name)
+            user.groups.add(group)
+
             send_verification_email(request, user)
-            
+
             messages.success(request, "Account created! Please check your email to verify.")
             return render(request, "accounts/verification_sent.html", {"email": user.email})
     else:

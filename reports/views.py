@@ -85,17 +85,20 @@ def report_create(request, case_id):
 
     if existing_report:
         if request.method == 'POST':
-            form = ReportCreateForm(request.POST, request.FILES, instance=existing_report)
+            form = ReportCreateForm(request.POST, instance=existing_report)
             if form.is_valid():
                 report = form.save()
                 case.status = 'PENDING_REVIEW'
                 case.save()
 
-                from .models import ReportImage
                 images = request.FILES.getlist('images')
-                if images:
-                    for img in images:
-                        ReportImage.objects.create(report=report, image=img)
+                for img in images:
+                    ReportImage.objects.create(report=report, image=img)
+
+                if not images:
+                    single = request.FILES.get('image')
+                    if single:
+                        ReportImage.objects.create(report=report, image=single)
 
                 CaseAuditLog.objects.create(
                     case=case,
@@ -108,18 +111,21 @@ def report_create(request, case_id):
             form = ReportCreateForm(instance=existing_report)
     else:
         if request.method == 'POST':
-            form = ReportCreateForm(request.POST, request.FILES)
+            form = ReportCreateForm(request.POST)
             if form.is_valid():
                 report = form.save(commit=False)
                 report.case = case
                 report.technician = user
                 report.save()
 
-                from .models import ReportImage
                 images = request.FILES.getlist('images')
-                if images:
-                    for img in images:
-                        ReportImage.objects.create(report=report, image=img)
+                for img in images:
+                    ReportImage.objects.create(report=report, image=img)
+
+                if not images:
+                    single = request.FILES.get('image')
+                    if single:
+                        ReportImage.objects.create(report=report, image=single)
 
                 case.status = 'PENDING_REVIEW'
                 case.save()

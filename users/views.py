@@ -122,6 +122,15 @@ def user_delete(request, user_id):
             messages.error(request, "You cannot delete your own account.")
             return redirect('user_detail', user_id=user_id)
 
+        from cases.models import Case
+        active_cases = Case.objects.filter(
+            technician=target_user,
+            status__in=['ASSIGNED', 'IN_PROGRESS', 'WAITING_REPORT']
+        ).count()
+        if active_cases > 0:
+            messages.warning(request, f"User has {active_cases} active case(s). Reassign them first before deleting.")
+            return redirect('user_detail', user_id=user_id)
+
         identifier = target_user.identifier
         ActivityLog.objects.create(
             user=request.user,

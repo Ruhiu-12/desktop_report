@@ -68,6 +68,7 @@ def case_detail(request, case_id):
         return HttpResponseForbidden("You do not have permission to view this case.")
 
     is_admin = user.is_superuser or user.groups.filter(name='Admin').exists()
+    is_technician = user.is_superuser or user.groups.filter(name='Admin').exists() or user.groups.filter(name='Technician').exists()
 
     context = {
         'case': case,
@@ -75,6 +76,7 @@ def case_detail(request, case_id):
         'notes': notes,
         'status_choices': Case.STATUS_CHOICES,
         'is_admin': is_admin,
+        'is_technician': is_technician,
     }
     return render(request, 'cases/case_detail.html', context)
 
@@ -113,18 +115,26 @@ def case_create(request):
     if request.method == 'POST':
         form = CaseCreateForm(request.POST, request.FILES)
         if form.is_valid():
+            asset_tag = request.POST.get('asset_tag', '').strip()
+
+            if asset_tag:
+                existing = Case.objects.filter(
+                    asset_tag=asset_tag,
+                    status__in=['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING_REPORT', 'PENDING_REVIEW']
+                ).first()
+                if existing:
+                    messages.warning(request, f'There is already an open case (#{existing.id}) for this machine. Check the status instead of creating a duplicate.')
+                    return redirect('case_detail', case_id=existing.id)
+
             case = form.save(commit=False)
             if request.user.is_authenticated:
                 case.created_by = request.user
             else:
                 case.created_by = None
-            # Get asset_tag from POST data (not in form fields)
-            asset_tag = request.POST.get('asset_tag', '').strip()
             if asset_tag:
                 case.asset_tag = asset_tag
             case.save()
 
-            # Update machine status if asset_tag matches a machine
             if asset_tag:
                 try:
                     machine = Machine.objects.get(name=asset_tag)
@@ -252,7 +262,6 @@ def case_assign(request, case_id):
             case.status = 'ASSIGNED'
             case.save()
 
-            # Update machine status to IN_REPAIR when assigned
             if case.asset_tag:
                 from labs.models import Machine
                 try:
@@ -262,9 +271,14 @@ def case_assign(request, case_id):
                 except Machine.DoesNotExist:
                     pass
 
+            if old_tech and old_tech != case.technician:
+                action = f'Case reassigned from {old_tech.identifier} to {case.technician.identifier}'
+            else:
+                action = f'Case assigned to {case.technician}'
+
             CaseAuditLog.objects.create(
                 case=case,
-                action=f'Case assigned to {case.technician}',
+                action=action,
                 changed_by=request.user,
             )
             messages.success(request, f'Case assigned to {case.technician}.')
@@ -318,7 +332,7 @@ def case_update_status(request, case_id):
 
             CaseAuditLog.objects.create(
                 case=case,
-                action=f'Status changed from {old_status} to {new_status}',
+                action=f'Report sent back to technician by {request.user.identifier}' if old_status == 'PENDING_REVIEW' and new_status == 'IN_PROGRESS' else f'Status changed from {old_status} to {new_status}',
                 changed_by=request.user,
             )
             messages.success(request, f'Case status updated to {case.get_status_display()}.')
